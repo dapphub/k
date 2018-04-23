@@ -249,6 +249,11 @@ public class KRun {
         }.apply(result);
     }
 
+    public static String getString(Module module, OutputModes output, Consumer<byte[]> print, K result, ColorSetting colorize) {
+        Module unparsingModule = RuleGrammarGenerator.getCombinedGrammar(module, false).getExtensionModule();
+        return (unparseTerm(result, unparsingModule, colorize) + "\n").replaceAll("\n", "\\\\n");
+    }
+
     private K parseConfigVars(KRunOptions options, CompiledDefinition compiledDef) {
         HashMap<KToken, K> output = new HashMap<>();
         for (Map.Entry<String, Pair<String, String>> entry
