@@ -178,7 +178,7 @@ public class Variable extends Term implements org.kframework.kore.KVariable {
 
     @Override
     public String toString() {
-        return originalName ;
+        return originalName;
     }
 
     @Override
