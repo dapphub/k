@@ -1,4 +1,4 @@
-// Copyright (c) 2013-2016 K Team. All Rights Reserved.
+// Copyright (c) 2013-2018 K Team. All Rights Reserved.
 package org.kframework.backend.java.kil;
 
 import java.util.Collections;
@@ -254,7 +254,9 @@ public class ConstrainedTerm extends JavaSymbolicObject {
                     && subjectConstraint.implies(ConjunctiveFormula.of(context.global()).addAll(candidateConstraint.equalities()), Sets.newHashSet())) {
                 context.setTopConstraint(null);
                 solutions.add(Triple.of(
-                        subjectConstraint.addAndSimplify(candidateConstraint.substitution(), context),
+                        subjectConstraint
+                                .addAndSimplify(candidateConstraint.substitution(), context)
+                                .orientSubstitution(variables),
                         true,
                         pair.getLeft()));
                 context.setTopConstraint(subjectConstraint);

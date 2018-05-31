@@ -1,4 +1,4 @@
-// Copyright (c) 2015-2016 K Team. All Rights Reserved.
+// Copyright (c) 2015-2018 K Team. All Rights Reserved.
 package org.kframework.kompile;
 
 import com.google.inject.Inject;
@@ -15,6 +15,7 @@ import org.kframework.compile.checks.CheckRewrite;
 import org.kframework.compile.checks.CheckSortTopUniqueness;
 import org.kframework.compile.checks.CheckStreams;
 import org.kframework.definition.*;
+import org.kframework.definition.Module;
 import org.kframework.kore.Sort;
 import org.kframework.main.GlobalOptions;
 import org.kframework.parser.concrete2kore.ParserUtils;
@@ -90,7 +91,7 @@ public class Kompile {
     }
 
     public CompiledDefinition run(File definitionFile, String mainModuleName, String mainProgramsModuleName) {
-        return run(definitionFile, mainModuleName, mainProgramsModuleName, defaultSteps(kompileOptions, kem, Collections.emptySet()));
+        return run(definitionFile, mainModuleName, mainProgramsModuleName, defaultSteps(kompileOptions, kem, files, Collections.emptySet()));
     }
 
     /**
@@ -109,6 +110,8 @@ public class Kompile {
         checkDefinition(parsedDef);
 
         Definition kompiledDefinition = pipeline.apply(parsedDef);
+
+        files.saveToKompiled("compiled.txt", kompiledDefinition.toString());
         sw.printIntermediate("Apply compile pipeline");
 
         ConfigurationInfoFromModule configInfo = new ConfigurationInfoFromModule(kompiledDefinition.mainModule());
@@ -142,7 +145,7 @@ public class Kompile {
         return DefinitionTransformer.from(mod -> excludeModulesByTag(excludedModuleTags, mod), "remove modules based on attributes");
     }
 
-    public static Function<Definition, Definition> defaultSteps(KompileOptions kompileOptions, KExceptionManager kem, Set<String> excludedModuleTags) {
+    public static Function<Definition, Definition> defaultSteps(KompileOptions kompileOptions, KExceptionManager kem, FileUtil files, Set<String> excludedModuleTags) {
         DefinitionTransformer resolveStrict = DefinitionTransformer.from(new ResolveStrict(kompileOptions)::resolve, "resolving strict and seqstrict attributes");
         DefinitionTransformer resolveHeatCoolAttribute = DefinitionTransformer.fromSentenceTransformer(new ResolveHeatCoolAttribute(new HashSet<>(kompileOptions.transition))::resolve, "resolving heat and cool attributes");
         DefinitionTransformer resolveAnonVars = DefinitionTransformer.fromSentenceTransformer(new ResolveAnonVar()::resolve, "resolving \"_\" vars");
@@ -151,6 +154,9 @@ public class Kompile {
         DefinitionTransformer resolveFun = DefinitionTransformer.from(new ResolveFun()::resolve, "resolving #fun");
         DefinitionTransformer generateSortPredicateSyntax = DefinitionTransformer.from(new GenerateSortPredicateSyntax()::gen, "adding sort predicate productions");
         DefinitionTransformer subsortKItem = DefinitionTransformer.from(Kompile::subsortKItem, "subsort all sorts to KItem");
+        GenerateCoverage cov = new GenerateCoverage(kompileOptions.coverage, files);
+        DefinitionTransformer genCoverage = DefinitionTransformer.fromRuleBodyTransformerWithRule(cov::gen, "generate coverage instrumentation");
+        DefinitionTransformer numberSentences = DefinitionTransformer.fromSentenceTransformer(new NumberSentences()::number, "number sentences uniquely");
 
         return def -> excludeModulesByTag(excludedModuleTags, def)
                 .andThen(d -> Kompile.resolveIOStreams(kem, d))
@@ -158,6 +164,7 @@ public class Kompile {
                 .andThen(resolveStrict)
                 .andThen(resolveAnonVars)
                 .andThen(d -> new ResolveContexts(kompileOptions).resolve(d))
+                .andThen(numberSentences)
                 .andThen(resolveHeatCoolAttribute)
                 .andThen(resolveSemanticCasts)
                 .andThen(generateSortPredicateSyntax)
@@ -165,6 +172,8 @@ public class Kompile {
                 .andThen(AddImplicitComputationCell::transformDefinition)
                 .andThen(new Strategy(kompileOptions.experimental.heatCoolStrategies).addStrategyCellToRulesTransformer())
                 .andThen(ConcretizeCells::transformDefinition)
+                .andThen(genCoverage)
+                .andThen(d -> { cov.close(); return d; })
                 .andThen(subsortKItem)
                 .andThen(Kompile::addSemanticsModule)
                 .apply(def);

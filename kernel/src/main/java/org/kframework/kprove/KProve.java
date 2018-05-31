@@ -1,4 +1,4 @@
-// Copyright (c) 2015-2016 K Team. All Rights Reserved.
+// Copyright (c) 2015-2018 K Team. All Rights Reserved.
 package org.kframework.kprove;
 
 import com.google.inject.Inject;
@@ -7,6 +7,7 @@ import org.kframework.Debugg;
 import org.kframework.attributes.Att;
 import org.kframework.compile.*;
 import org.kframework.definition.*;
+import org.kframework.definition.Module;
 import org.kframework.kompile.CompiledDefinition;
 import org.kframework.kompile.Kompile;
 import org.kframework.kore.K;
@@ -100,7 +101,7 @@ public class KProve {
         Module specModule = getModule(specModuleName, modulesMap, compiledDefinition.getParsedDefinition());
         specModule = backend.specificationSteps(compiledDefinition.kompiledDefinition).apply(specModule);
         specModule = spliceModule(specModule, compiledDefinition.kompiledDefinition);
-        Definition combinedDef = Definition.apply(defModule, (Set<Module>) immutable(modules).$bar(compiledDefinition.getParsedDefinition().entryModules()), Att.empty());
+        Definition combinedDef = Definition.apply(defModule, compiledDefinition.getParsedDefinition().entryModules(), Att.empty());
         Definition compiled = compileDefinition(backend, combinedDef);
         return Tuple2.apply(compiled, specModule);
     }

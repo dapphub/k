@@ -26,15 +26,24 @@ object ToKast {
   def escape(s: String): String = StringEscapeUtils.escapeJava(s)
 
   def unparse(inParen: Boolean, l: KLabel) : String = {
+    var name: String = ""
     if (l.name.matches("[#a-z][a-zA-Z0-9]*")
         && l.name != "#token" && l.name != "#klabel") {
-      l.name
+      name = l.name
     } else if (inParen) {
-      " `"+l.name+'`'
+      name = " `"+ escapeBackTicksAndSlashes(l.name) +'`'
     } else {
-      '`'+l.name+'`'
+      name = '`' + escapeBackTicksAndSlashes(l.name) + '`'
+    }
+    if (l.params.isEmpty) {
+      name
+    } else {
+      name + "{"+ l.params.map(_.name).reduce((s1,s2) => s1 + "," + s2) + "}"
     }
   }
+
+  def escapeBackTicksAndSlashes(str: String) : String =
+    str.replaceAll("\\\\", "\\\\\\\\").replaceAll("`", "\\\\`");
 
   /**
    * Recursive worker function for printing KAST terms.
@@ -60,7 +69,7 @@ object ToKast {
    * @param k The term to print
    */
   def unparse(accumulator:String=>Unit, inParen: Boolean, prec: Int, k: K): Unit = k match {
-    case KToken(s, sort) => accumulator("#token(\"" + escape(s) + "\",\"" + escape(sort.name) + "\")")
+    case KToken(s, sort) => accumulator("#token(\"" + escape(s) + "\",\"" + escape(sort.toString) + "\")")
     case InjectedKLabel(l) => accumulator("#klabel("+apply(l)+")")
     case KVariable(v) => accumulator(v.toString)
     case KApply(l, List()) => accumulator(unparse(inParen,l)+"(.KList)")

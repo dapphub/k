@@ -1,4 +1,4 @@
-// Copyright (c) 2014-2016 K Team. All Rights Reserved.
+// Copyright (c) 2014-2018 K Team. All Rights Reserved.
 package org.kframework.kompile;
 
 import com.beust.jcommander.Parameter;
@@ -37,7 +37,7 @@ public class KompileOptions implements Serializable {
     private static final String DEFAULT_DOC_STYLE = "poster,style=bubble";
 
     public String docStyle() {
-        if (backend == Backends.HTML) {
+        if (backend.equals(Backends.HTML)) {
             if (docStyle == null) {
                 return "k-definition.css";
             }
@@ -81,6 +81,9 @@ public class KompileOptions implements Serializable {
     private boolean nonStrict;
 
     public boolean strict() { return !nonStrict; }
+
+    @Parameter(names="--coverage", description="Generate coverage data when executing semantics.")
+    public boolean coverage;
 
     @ParametersDelegate
     public Experimental experimental = new Experimental();

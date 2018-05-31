@@ -1,4 +1,4 @@
-// Copyright (c) 2012-2016 K Team. All Rights Reserved.
+// Copyright (c) 2012-2018 K Team. All Rights Reserved.
 package org.kframework.kast;
 
 import com.google.inject.Inject;
@@ -8,8 +8,9 @@ import org.kframework.attributes.Source;
 import org.kframework.compile.ExpandMacros;
 import org.kframework.kompile.CompiledDefinition;
 import org.kframework.kore.K;
-import org.kframework.unparser.ToKast;
 import org.kframework.main.FrontEnd;
+import org.kframework.parser.outer.Outer;
+import org.kframework.unparser.ToKast;
 import org.kframework.utils.Stopwatch;
 import org.kframework.utils.errorsystem.KEMException;
 import org.kframework.utils.errorsystem.KExceptionManager;
@@ -29,8 +30,6 @@ import java.io.Reader;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-
-import static org.kframework.kore.KORE.*;
 
 public class KastFrontEnd extends FrontEnd {
 
@@ -90,24 +89,27 @@ public class KastFrontEnd extends FrontEnd {
             org.kframework.kore.Sort sort = options.sort;
             if (sort == null) {
                 if (env.get("KRUN_SORT") != null) {
-                    sort = Sort(env.get("KRUN_SORT"));
+                    sort = Outer.parseSort(env.get("KRUN_SORT"));
                 } else {
                     sort = def.programStartSymbol;
                 }
             }
             org.kframework.definition.Module mod;
+            org.kframework.definition.Module compiledMod;
             if (options.module == null) {
                 mod = def.programParsingModuleFor(def.mainSyntaxModuleName(), kem).get();
+                compiledMod = def.kompiledDefinition.getModule(def.mainSyntaxModuleName()).get();
             } else {
                 Option<org.kframework.definition.Module> mod2 = def.programParsingModuleFor(options.module, kem);
                 if (mod2.isEmpty()) {
                     throw KEMException.innerParserError("Module " + options.module + " not found. Specify a module with -m.");
                 }
                 mod = mod2.get();
+                compiledMod = def.kompiledDefinition.getModule(options.module).get();
             }
             K parsed = def.getParser(mod, sort, kem).apply(FileUtil.read(stringToParse), source);
             if (options.expandMacros) {
-                parsed = new ExpandMacros(mod, kem, files, options.global, def.kompileOptions).expand(parsed);
+                parsed = new ExpandMacros(compiledMod, kem, files, options.global, def.kompileOptions).expand(parsed);
             }
             System.out.println(ToKast.apply(parsed));
             sw.printTotal("Total");

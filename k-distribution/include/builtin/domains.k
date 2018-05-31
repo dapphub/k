@@ -1,4 +1,4 @@
-// Copyright (c) 2015-2016 K Team. All Rights Reserved.
+// Copyright (c) 2015-2018 K Team. All Rights Reserved.
 require "kast.k"
 
 module DOMAINS-SYNTAX
@@ -333,8 +333,8 @@ module INT
 
   syntax Int ::= "~Int" Int                     [function, latex(\mathop{\sim_{\scriptstyle\it Int}}{#1}), hook(INT.not)]
                > left:
-                 Int "^Int" Int                 [function, left, smtlib(expFunc), latex({#1}\mathrel{{\char`\^}_{\!\scriptstyle\it Int}}{#2}), hook(INT.pow)]
-               | Int "^%Int" Int Int            [function, left, hook(INT.powmod)]
+                 Int "^Int" Int                 [function, left, smtlib(^), latex({#1}\mathrel{{\char`\^}_{\!\scriptstyle\it Int}}{#2}), hook(INT.pow)]
+               | Int "^%Int" Int Int            [function, left, smtlib((mod (^ #1 #2) #3)), hook(INT.powmod)]
                > left:
                  Int "*Int" Int                 [function, left, smtlib(*), latex({#1}\mathrel{\ast_{\scriptstyle\it Int}}{#2}), hook(INT.mul)]
                /* FIXME: translate /Int and %Int into smtlib */
@@ -367,6 +367,9 @@ module INT
   =>
     ((I1 %Int absInt(I2)) +Int absInt(I2)) %Int absInt(I2)
   requires I2 =/=Int 0    [concrete]
+
+  rule minInt(I1:Int, I2:Int) => I1 requires I1 <=Int I2
+  rule minInt(I1:Int, I2:Int) => I2 requires I1 >=Int I2
 
   syntax Bool ::= Int "<=Int" Int         [function, left, smtlib(<=), latex({#1}\mathrel{\leq_{\scriptstyle\it Int}}{#2}), hook(INT.le)]
                 | Int "<Int" Int          [function, left, smtlib(<), latex({#1}\mathrel{<_{\scriptstyle\it Int}}{#2}), hook(INT.lt)]
@@ -615,6 +618,9 @@ module K-EQUAL
 
   syntax K ::= "#if" Bool "#then" K "#else" K "#fi"   [function, smtlib(ite), hook(KEQUAL.ite), poly(0, 2, 3)]
 
+  rule #if C:Bool #then B1 #else _ #fi => B1 requires C
+  rule #if C:Bool #then _ #else B2 #fi => B2 requires notBool C
+
 endmodule
 
 module K-REFLECTION
@@ -720,6 +726,8 @@ module K-IO
              | "#seekEnd" "(" Int "," Int ")" [function, hook(IO.seekEnd), impure]
              | "#putc" "(" Int "," Int ")"      [function, hook(IO.putc), impure]
              | "#write" "(" Int "," String ")" [function, hook(IO.write), impure]
+             | "#lock" "(" Int "," Int ")" [function, hook(IO.lock), impure]
+             | "#unlock" "(" Int "," Int ")" [function, hook(IO.unlock), impure]
 
   syntax KItem ::= "#stat" "(" String ")" [function, hook(IO.stat), impure]
                  | "#lstat" "(" String ")" [function, hook(IO.lstat), impure]
@@ -731,7 +739,7 @@ module K-IO
                                   String) // module name
                                   [function, hook(IO.parseInModule), impure]
 
-  rule #open(S:String) => #open(S:String, "rw")
+  rule #open(S:String) => #open(S:String, "r+")
 
   syntax Int ::= "#stdin"   [function]
                 | "#stdout" [function]
@@ -748,6 +756,8 @@ module K-IO
 
   syntax KItem ::= #system ( String ) [function, hook(IO.system), impure]
                  | "#systemResult" "(" Int /* exit code */ "," String /* stdout */ "," String /* stderr */ ")"
+
+  syntax K ::= #logToFile(String, String) [function, hook(IO.log), impure, returnsUnit]
 
 endmodule
 

@@ -1,4 +1,4 @@
-// Copyright (c) 2013-2016 K Team. All Rights Reserved.
+// Copyright (c) 2013-2018 K Team. All Rights Reserved.
 package org.kframework.backend.java.symbolic;
 
 import com.google.common.base.Stopwatch;
@@ -111,7 +111,7 @@ public class SymbolicRewriter {
 
         K topOfStrategyCell = ((KApply) theStrategy.get()).klist().items().get(0);
 
-        if ((topOfStrategyCell instanceof KApply) && ((KApply) topOfStrategyCell).klabel().name().equals(KLabels.KSEQ)) {
+        if ((topOfStrategyCell instanceof KApply) && KLabels.KSEQ.equals(((KApply) topOfStrategyCell).klabel())) {
             topOfStrategyCell = ((KApply) topOfStrategyCell).klist().items().get(0);
         }
         boolean isStuck = !(topOfStrategyCell instanceof KApply) ||
@@ -553,7 +553,7 @@ public class SymbolicRewriter {
 
     private void flattenList(List<K> unflat, List<K> flat) {
         unflat.forEach(x -> {
-            if (x instanceof KItem && ((KItem) x).klabel().name().equals(KLabels.AND)) {
+            if (x instanceof KItem && KLabels.AND.equals(((KItem) x).klabel())) {
                 flattenList(((KItem) x).items(), flat);
             } else {
                 flat.add(x);
@@ -579,7 +579,7 @@ public class SymbolicRewriter {
     private K disjunctResults(List<K> results) {
         return results.stream().map(x -> x instanceof ConjunctiveFormula ? processConjuncts((ConjunctiveFormula) x) : x)
                 .distinct()
-                .reduce((x, y) -> KORE.KApply(KORE.KLabel(KLabels.ML_OR), x, y)).orElse(KORE.KApply(KORE.KLabel(KLabels.ML_FALSE)));
+                .reduce((x, y) -> KORE.KApply(KLabels.ML_OR, x, y)).orElse(KORE.KApply(KLabels.ML_FALSE));
     }
 
     public List<ConstrainedTerm> proveRule(

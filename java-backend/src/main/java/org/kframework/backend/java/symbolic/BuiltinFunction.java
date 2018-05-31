@@ -1,4 +1,4 @@
-// Copyright (c) 2013-2016 K Team. All Rights Reserved.
+// Copyright (c) 2013-2018 K Team. All Rights Reserved.
 package org.kframework.backend.java.symbolic;
 
 import org.kframework.attributes.Att;
@@ -8,6 +8,7 @@ import org.kframework.backend.java.kil.Term;
 import org.kframework.backend.java.kil.TermContext;
 import org.kframework.backend.java.util.ImpureFunctionException;
 import org.kframework.kil.Attribute;
+import org.kframework.kore.KLabel;
 import org.kframework.utils.errorsystem.KEMException;
 import org.kframework.utils.errorsystem.KExceptionManager;
 
@@ -52,7 +53,7 @@ public class BuiltinFunction {
         } catch (NoSuchMethodException | IllegalAccessException e) {
             throw KEMException.internalError("Failed to load partial evaluation hook implementation", e);
         }
-        for (Map.Entry<String, Att> entry : definition.kLabelAttributes().entrySet()) {
+        for (Map.Entry<KLabel, Att> entry : definition.kLabelAttributes().entrySet()) {
             String hookAttribute = entry.getValue().getOptional(Attribute.HOOK_KEY).orElse(null);
             if (hookAttribute != null) {
                 /*

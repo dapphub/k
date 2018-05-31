@@ -1,4 +1,4 @@
-// Copyright (c) 2015-2016 K Team. All Rights Reserved.
+// Copyright (c) 2015-2018 K Team. All Rights Reserved.
 package org.kframework.parser.concrete2kore;
 
 import org.apache.commons.io.FileUtils;
@@ -261,18 +261,5 @@ public class ParserUtils {
                     + " in definition. Use --main-module to specify one.");
         }
         return opt.get();
-    }
-
-    public org.kframework.definition.Definition loadDefinition(
-            String mainModuleName,
-            String syntaxModuleName,
-            String definitionText,
-            File source,
-            File currentDirectory,
-            List<File> lookupDirectories,
-            boolean dropQuote, boolean autoImportDomains) {
-        return loadDefinition(mainModuleName, syntaxModuleName, definitionText,
-                source,
-                currentDirectory, lookupDirectories, dropQuote, autoImportDomains);
     }
 }
