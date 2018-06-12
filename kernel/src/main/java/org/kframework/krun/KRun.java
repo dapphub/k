@@ -215,21 +215,27 @@ public class KRun {
         prettyPrint(module, output, print, abstractKLabels(module, result, lossyKLabels), colorize);
     }
 
+    public static K abstractTerm(Module module, K k) {
+        Module unparsingModule = RuleGrammarGenerator.getCombinedGrammar(module, false).getExtensionModule();
+        String abstractedTerm  = unparseTerm(k, unparsingModule, ColorSetting.OFF);
+        Sort   finalSort       = Sorts.K();
+        // TODO: better sort calculation
+        // Option<Sort> termSort        = module.sortFor().get(k.klabel());
+        // if (! termSort.isEmpty()) {
+        //     finalSort = termSort.get();
+        // }
+        return KToken(abstractedTerm, finalSort);
+    }
+
     public static K abstractKLabels(Module module, K result, Set<String> lossyKLabels) {
         K abstracted = new TransformK() {
             @Override
             public K apply(KApply k) {
                 if (lossyKLabels.contains(k.klabel().name())) {
-                    Module       unparsingModule = RuleGrammarGenerator.getCombinedGrammar(module, false).getExtensionModule();
-                    String       abstractTerm    = unparseTerm(result, unparsingModule, ColorSetting.OFF);
-                    Option<Sort> termSort        = module.sortFor().get(k.klabel());
-                    Sort         finalSort       = Sorts.K();
-                    if (! termSort.isEmpty()) {
-                        finalSort = termSort.get();
-                    }
-                    return KToken(abstractTerm, finalSort);
+                    List<K> newArgs = k.klist().items().stream().map(arg -> KRun.abstractTerm(module, arg)).collect(Collectors.toList());
+                    return KApply(k.klabel(), KList(newArgs), k.att());
                 } else {
-                    return k;
+                    return super.apply(k);
                 }
             }
         }.apply(result);
