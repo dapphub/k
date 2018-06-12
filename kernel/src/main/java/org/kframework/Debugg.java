@@ -7,9 +7,12 @@ import org.kframework.krun.ColorSetting;
 import org.kframework.krun.KRun;
 import org.kframework.parser.concrete2kore.generator.RuleGrammarGenerator;
 import org.kframework.unparser.OutputModes;
+import org.kframework.unparser.ToJson;
 
+import org.apache.commons.io.output.WriterOutputStream;
 import java.io.FileNotFoundException;
 import java.io.PrintWriter;
+import java.io.OutputStream;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.*;
@@ -149,31 +152,25 @@ public class Debugg {
         }
     }
 
-    public static void writeJsonFile(String fileCode, K contents) {
+    public static String writeJsonFile(K contents) {
+        String fileCode = Integer.toString(contents.hashCode() * contents.hashCode());
         String filename = "nodes/" + fileCode + ".json";
-        if (writtenCodes.contains(fileCode)) {
-            return;
-        } else {
+        if (! writtenCodes.contains(fileCode)) {
             try {
                 writtenCodes.add(fileCode);
                 PrintWriter fOut = new PrintWriter(filename);
-                KRun.abstractPrettyPrint(Debugg.module, OutputModes.JSON, s -> fOut.println(s), contents, Debugg.colorize, Debugg.lossyKLabels);
+                ToJson.apply(new WriterOutputStream(fOut, "UTF-8"), KRun.abstractKLabels(Debugg.module, contents, Debugg.lossyKLabels));
+                // KRun.abstractPrettyPrint(Debugg.module, OutputModes.JSON, s -> fOut.println(s.toString()), contents, Debugg.colorize, Debugg.lossyKLabels);
                 fOut.close();
             } catch (FileNotFoundException e) {
                 e.printStackTrace();
             }
         }
+        return fileCode;
     }
 
     public static String addNode(K term, K constraint) {
-        String termHash       = Integer.toString(term.hashCode());
-        String constraintHash = Integer.toString(constraint.hashCode());
-        String overallHash    = termHash + "_" + constraintHash;
-
-        writeJsonFile(termHash,       term);
-        writeJsonFile(constraintHash, constraint);
-
-        return overallHash;
+        return writeJsonFile(term) + "_" + writeJsonFile(constraint);
     }
 
     public static void addStep(K from, K to, K from_c, K to_c) {
