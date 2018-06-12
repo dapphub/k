@@ -43,6 +43,9 @@ public class Debugg {
 
     private static Queue<String> tmpRules;
 
+    private static Set<String> lossyKLabels = new HashSet<String>();
+    private static Set<String> writtenCodes;
+
     public static void init(Module module, OutputModes output, Consumer<byte[]> print, ColorSetting colorize) {
         Debugg.module = module;
         Debugg.output = output;
@@ -57,6 +60,8 @@ public class Debugg {
         Debugg.normalNodes = new HashMap<>();
         Debugg.currentRule = "";
         Debugg.unparsingModule = RuleGrammarGenerator.getCombinedGrammar(module, false).getExtensionModule();
+
+        Debugg.writtenCodes = new HashSet<String>();
     }
 
     public static void step(String s) {
@@ -144,25 +149,31 @@ public class Debugg {
         }
     }
 
-    public static String addNode(K term, K constraint) {
-        String t = KRun.getString(Debugg.unparsingModule, Debugg.output, Debugg.print, term, Debugg.colorize);
-        String c = KRun.getString(Debugg.unparsingModule, Debugg.output, Debugg.print, constraint, Debugg.colorize);
-        String node = "{\n"
-                + "\"term\": \"" + t + "\",\n"
-                + "\"constraint\": \"" + c + "\"\n"
-                + "}\n";
-        String node_key = Integer.toHexString(node.hashCode());
-        if(!Debugg.nodeMap.containsKey(node_key)) {
-            nodeMap.put(node_key, true);
+    public static void writeJsonFile(String fileCode, K contents) {
+        String filename = "nodes/" + fileCode + ".json";
+        if (writtenCodes.contains(fileCode)) {
+            return;
+        } else {
             try {
-                Debugg.writer = new PrintWriter("nodes/" + node_key + ".json");
-                Debugg.writer.println(node);
-                Debugg.writer.close();
+                writtenCodes.add(fileCode);
+                PrintWriter fOut = new PrintWriter(filename);
+                KRun.abstractPrettyPrint(Debugg.module, OutputModes.JSON, s -> fOut.println(s), contents, Debugg.colorize, Debugg.lossyKLabels);
+                fOut.close();
             } catch (FileNotFoundException e) {
                 e.printStackTrace();
             }
         }
-        return node_key;
+    }
+
+    public static String addNode(K term, K constraint) {
+        String termHash       = Integer.toString(term.hashCode());
+        String constraintHash = Integer.toString(constraint.hashCode());
+        String overallHash    = termHash + "_" + constraintHash;
+
+        writeJsonFile(termHash,       term);
+        writeJsonFile(constraintHash, constraint);
+
+        return overallHash;
     }
 
     public static void addStep(K from, K to, K from_c, K to_c) {
