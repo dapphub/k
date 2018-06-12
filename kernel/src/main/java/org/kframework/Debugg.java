@@ -16,7 +16,10 @@ import java.io.OutputStream;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.*;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 import java.util.function.Consumer;
+import java.lang.Math;
 
 public class Debugg {
 
@@ -46,8 +49,19 @@ public class Debugg {
 
     private static Queue<String> tmpRules;
 
-    private static Set<String> lossyKLabels = new HashSet<String>();
     private static Set<String> writtenCodes;
+    private static Set<String> lossyKLabels = Stream.of("<k>", "<mode>", "<schedule>", "<analysis>", "<output>",
+                                                       "<statusCode>", "<callStack>", "<interimStates>",
+                                                       "<touchedAccounts>", "<program>", "<programBytes>", "<id>",
+                                                       "<caller>", "<callData>", "<callValue>", "<wordStack>",
+                                                       "<localMem>", "<pc>", "<gas>", "<memoryUsed>", "<previousGas>",
+                                                       "<static>", "<callDepth>", "<selfDestruct>", "<log>", "<refund>",
+                                                       "<gasPrice>", "<origin>", "<previousHash>", "<ommersHash>",
+                                                       "<coinbase>", "<stateRoot>", "<transactionsRoot>", "<receiptsRoot>",
+                                                       "<logsBloom>", "<difficulty>", "<number>", "<gasLimit>",
+                                                       "<gasUsed>", "<timestamp>", "<extraData>", "<mixHash>",
+                                                       "<blockNonce>", "<ommerBlockHeaders>", "<blockhash>", "<network>")
+                                                    .collect(Collectors.toSet());
 
     public static void init(Module module, OutputModes output, Consumer<byte[]> print, ColorSetting colorize) {
         Debugg.module = module;
@@ -153,7 +167,7 @@ public class Debugg {
     }
 
     public static String writeJsonFile(K contents) {
-        String fileCode = Integer.toString(contents.hashCode() * contents.hashCode());
+        String fileCode = Integer.toString(Math.abs(contents.hashCode()));
         String filename = "nodes/" + fileCode + ".json";
         if (! writtenCodes.contains(fileCode)) {
             try {
