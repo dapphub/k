@@ -3,6 +3,7 @@ package org.kframework.backend.java.util;
 
 import com.google.common.collect.ImmutableSet;
 import com.sun.jna.Pointer;
+import org.kframework.Debugg;
 import org.kframework.backend.java.z3.*;
 import org.kframework.main.GlobalOptions;
 import org.kframework.utils.OS;
@@ -48,6 +49,7 @@ public class Z3Wrapper {
     }
 
     public synchronized boolean isUnsat(String query, int timeout) {
+        Debugg.z3OnStepQuery(SMT_PRELUDE + query + CHECK_SAT);
         if (options.z3Executable) {
             return checkQueryWithExternalProcess(query, timeout);
         } else {
@@ -101,6 +103,7 @@ public class Z3Wrapper {
         } catch (IOException e) {
             e.printStackTrace();
         }
+        Debugg.z3OnStepFinish(result);
         if (!Z3_QUERY_RESULTS.contains(result)) {
             throw KEMException.criticalError("Z3 crashed on input query:\n" + query + "\nresult:\n" + result);
         }
