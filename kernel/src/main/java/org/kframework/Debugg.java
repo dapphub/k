@@ -184,7 +184,7 @@ public class Debugg {
     }
 
     public static String addNode(K term, K constraint) {
-        return writeJsonFile(term) + "_" + writeJsonFile(constraint);
+        return writeJsonFile(term) + "_" + writeJsonFile(KRun.abstractTerm(Debugg.module, constraint));
     }
 
     public static void addStep(K from, K to, K from_c, K to_c) {
