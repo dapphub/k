@@ -682,6 +682,7 @@ public class ConjunctiveFormula extends Term implements CollectionInternalRepres
             if (global.globalOptions.debug) {
                 System.err.println("Attempting to prove: \n\t" + left + "\n  implies \n\t" + right);
             }
+            Debugg.z3OnStep(left, right);
 
             right = right.orientSubstitution(rightOnlyVariables);
             right = left.simplifyConstraint(right);

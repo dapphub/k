@@ -105,6 +105,45 @@ public class Debugg {
         System.out.println(KRun.getString(Debugg.module, Debugg.output, Debugg.print, term, Debugg.colorize));
     }
 
+    private static String z3OnStepLeft;
+    private static String z3OnStepRight;
+    private static String z3OnStepQueryString;
+    public static void z3OnStep(K left, K right) {
+        z3OnStepLeft = KRun.getString(Debugg.module, Debugg.output, Debugg.print, left, Debugg.colorize)
+                .replaceAll("\"","\\\\\"")
+                .replaceAll("\n","\\\\n");
+        z3OnStepRight = KRun.getString(Debugg.module, Debugg.output, Debugg.print, right, Debugg.colorize)
+                .replaceAll("\"","\\\\\"")
+                .replaceAll("\n","\\\\n");
+    }
+    public static void z3OnStepQuery(String query) {
+        z3OnStepQueryString = query
+                .replaceAll("\"","\\\\\"")
+                .replaceAll("\n","\\\\n");
+    }
+    public static void z3OnStepFinish(String result) {
+        result = result
+                .replaceAll("\"","\\\\\"")
+                .replaceAll("\n","\\\\n");
+        String json = "{\n"
+                // + "\"rules\": "  + "{\n" + rules + "\n},\n"
+                //+ "\"nodes\": "  + "{\n" + nodes + "\n},\n"
+                + "\"left\": \"" + z3OnStepLeft + "\",\n"
+                + "\"right\": \"" + z3OnStepRight + "\",\n"
+                + "\"query\": \"" + z3OnStepQueryString + "\",\n"
+                + "\"result\": \"" + result + "\"\n"
+                + "}\n";
+        String json_key = Integer.toHexString(json.hashCode());
+        try {
+            Debugg.writer = new PrintWriter("circc/" + json_key + ".json");
+            Debugg.writer.println(json);
+            Debugg.writer.close();
+            System.out.println("z3feedback " + Debugg.currentTerm + " " + json_key);
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        }
+    }
+
     public static void save() {
         StringBuilder rules = new StringBuilder();
         /*for (String key : Debugg.ruleMap.keySet()) {
