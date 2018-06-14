@@ -228,18 +228,24 @@ public class KRun {
     }
 
     public static K abstractKLabels(Module module, K result, Set<String> lossyKLabels) {
-        K abstracted = new TransformK() {
+        return new TransformK() {
             @Override
             public K apply(KApply k) {
                 if (lossyKLabels.contains(k.klabel().name())) {
-                    List<K> newArgs = k.klist().items().stream().map(arg -> KRun.abstractTerm(module, arg)).collect(Collectors.toList());
+                    List<K> items = new ArrayList<>();
+                    Att att = module.attributesFor().apply(KLabel(k.klabel().name()));
+                    if (att.contains("assoc") && att.contains("unit")) {
+                        items = Assoc.flatten(k.klabel(), k.klist().items(), KLabel(att.get("unit")));
+                    } else {
+                        items = k.klist().items();
+                    }
+                    List<K> newArgs = items.stream().map(arg -> KRun.abstractTerm(module, arg)).collect(Collectors.toList());
                     return KApply(k.klabel(), KList(newArgs), k.att());
                 } else {
                     return super.apply(k);
                 }
             }
         }.apply(result);
-        return abstracted;
     }
 
     private K parseConfigVars(KRunOptions options, CompiledDefinition compiledDef) {
