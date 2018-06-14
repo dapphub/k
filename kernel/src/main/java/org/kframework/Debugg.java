@@ -60,7 +60,7 @@ public class Debugg {
                                                        "<coinbase>", "<stateRoot>", "<transactionsRoot>", "<receiptsRoot>",
                                                        "<logsBloom>", "<difficulty>", "<number>", "<gasLimit>",
                                                        "<gasUsed>", "<timestamp>", "<extraData>", "<mixHash>",
-                                                       "<blockNonce>", "<ommerBlockHeaders>", "<blockhash>", "<network>")
+                                                       "<blockNonce>", "<ommerBlockHeaders>", "<blockhash>", "<network>", "#And")
                                                     .collect(Collectors.toSet());
 
     public static void init(Module module, OutputModes output, Consumer<byte[]> print, ColorSetting colorize) {
@@ -166,6 +166,10 @@ public class Debugg {
         }
     }
 
+    public static K abstractionPass(K contents) {
+        return KRun.abstractKLabels(Debugg.module, contents, Debugg.lossyKLabels);
+    }
+
     public static String writeJsonFile(K contents) {
         String fileCode = Integer.toString(Math.abs(contents.hashCode()));
         String filename = "nodes/" + fileCode + ".json";
@@ -173,7 +177,7 @@ public class Debugg {
             try {
                 writtenCodes.add(fileCode);
                 PrintWriter fOut = new PrintWriter(filename);
-                ToJson.apply(new WriterOutputStream(fOut, "UTF-8"), KRun.abstractKLabels(Debugg.module, contents, Debugg.lossyKLabels));
+                ToJson.apply(new WriterOutputStream(fOut, "UTF-8"), abstractionPass(contents));
                 // KRun.abstractPrettyPrint(Debugg.module, OutputModes.JSON, s -> fOut.println(s.toString()), contents, Debugg.colorize, Debugg.lossyKLabels);
                 fOut.close();
             } catch (FileNotFoundException e) {
@@ -184,7 +188,7 @@ public class Debugg {
     }
 
     public static String addNode(K term, K constraint) {
-        return writeJsonFile(term) + "_" + writeJsonFile(KRun.abstractTerm(Debugg.module, constraint));
+        return writeJsonFile(term) + "_" + writeJsonFile(constraint);
     }
 
     public static void addStep(K from, K to, K from_c, K to_c) {
