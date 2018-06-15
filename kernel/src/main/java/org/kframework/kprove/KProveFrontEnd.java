@@ -100,7 +100,6 @@ public class KProveFrontEnd extends FrontEnd {
             throw e;
         } finally {
             Debugg.endProveRule();
-            Debugg.save();
             scope.exit();
         }
     }

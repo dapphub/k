@@ -64,7 +64,6 @@ public class KProve {
         } else {
             exit = 1;
         }
-        Debugg.save();
         KRun.prettyPrint(compiled._1().getModule("LANGUAGE-PARSING").get(), options.prettyPrint.output, s -> KRun.outputFile(s, options.prettyPrint, files), results, options.prettyPrint.color(tty.stdout, files.getEnv()));
         return exit;
     }
