@@ -144,43 +144,6 @@ public class Debugg {
         }
     }
 
-    public static void save() {
-        StringBuilder rules = new StringBuilder();
-        /*for (String key : Debugg.ruleMap.keySet()) {
-            if(!rules.toString().equals("")) rules.append(",\n");
-            rules.append("\"")
-                    .append(key)
-                    .append("\": \"")
-                    .append(Debugg.ruleMap.get(key))
-                    .append("\"");
-        }*/
-        /*StringBuilder nodes = new StringBuilder();
-        for (String key : Debugg.nodeMap.keySet()) {
-            if(!nodes.toString().equals("")) nodes.append(",\n");
-            nodes.append("\"")
-                    .append(key)
-                    .append("\": ")
-                    .append(Debugg.nodeMap.get(key));
-        }*/
-        String json = "{\n"
-           // + "\"rules\": "  + "{\n" + rules + "\n},\n"
-            //+ "\"nodes\": "  + "{\n" + nodes + "\n},\n"
-            + "\"proofs\": [\n" + String.join(",\n", ruleProfs) + "\n]\n"
-            + "}\n";
-        //try {
-
-
-            //DateFormat df = new SimpleDateFormat("yyyy_MM_dd_HH_mm");
-            //Date today = Calendar.getInstance().getTime();
-            //String reportDate = df.format(today);
-            //Debugg.writer = new PrintWriter("steps/debug_" + reportDate + ".json");
-            //Debugg.writer.println(json);
-            //Debugg.writer.close();
-        //} catch (FileNotFoundException e) {
-        //    e.printStackTrace();
-        //}
-    }
-
     public static String addNode(K term, K constraint) {
         String t = KRun.getString(Debugg.unparsingModule, Debugg.output, Debugg.print, term, Debugg.colorize);
         String c = KRun.getString(Debugg.unparsingModule, Debugg.output, Debugg.print, constraint, Debugg.colorize);
@@ -274,24 +237,8 @@ public class Debugg {
     }
 
     public static void endProveRule() {
-        if(Debugg.steps != null) {
-            String steps = String.join(",\n", Debugg.steps);
-            String crash = "";
-            if(Debugg.crash) {
-                System.out.println("crash " + currentTerm);
-                //String crashTermString = KRun.getString(Debugg.module, Debugg.output, Debugg.print, Debugg.currentTerm, Debugg.colorize);
-                crash = ",\"crash\": \"" + currentTerm +"\"\n" +
-                        ",\"crash_rule\": \"" + currentRule.replaceAll("\"","'").replaceAll("/\\\\","AND") + "\"\n" +
-                        ",\"exception\": \"" + Debugg.exception + "\"\n";
-            }
-
-            String jsonRuleProve = "{\n" +
-                    "\"initialTerm\": \"" + initialTerm + "\",\n" +
-                    "\"targetTerm\": \""  + targetTerm  + "\",\n" +
-                    "\"steps\": [" + steps + "]\n" +
-                    crash +
-                    "}\n";
-            ruleProfs.add(jsonRuleProve);
+        if(Debugg.crash) {
+            System.out.println("crash " + currentTerm);
         }
     }
 
