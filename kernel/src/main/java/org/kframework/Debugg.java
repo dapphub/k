@@ -274,23 +274,25 @@ public class Debugg {
     }
 
     public static void endProveRule() {
-        String steps = String.join(",\n", Debugg.steps);
-        String crash = "";
-        if(Debugg.crash) {
-            System.out.println("crash " + currentTerm);
-            //String crashTermString = KRun.getString(Debugg.module, Debugg.output, Debugg.print, Debugg.currentTerm, Debugg.colorize);
-            crash = ",\"crash\": \"" + currentTerm +"\"\n" +
-                    ",\"crash_rule\": \"" + currentRule.replaceAll("\"","'").replaceAll("/\\\\","AND") + "\"\n" +
-                    ",\"exception\": \"" + Debugg.exception + "\"\n";
-        }
+        if(Debugg.steps != null) {
+            String steps = String.join(",\n", Debugg.steps);
+            String crash = "";
+            if(Debugg.crash) {
+                System.out.println("crash " + currentTerm);
+                //String crashTermString = KRun.getString(Debugg.module, Debugg.output, Debugg.print, Debugg.currentTerm, Debugg.colorize);
+                crash = ",\"crash\": \"" + currentTerm +"\"\n" +
+                        ",\"crash_rule\": \"" + currentRule.replaceAll("\"","'").replaceAll("/\\\\","AND") + "\"\n" +
+                        ",\"exception\": \"" + Debugg.exception + "\"\n";
+            }
 
-        String jsonRuleProve = "{\n" +
-                "\"initialTerm\": \"" + initialTerm + "\",\n" +
-                "\"targetTerm\": \""  + targetTerm  + "\",\n" +
-                "\"steps\": [" + steps + "]\n" +
-                crash +
-                "}\n";
-        ruleProfs.add(jsonRuleProve);
+            String jsonRuleProve = "{\n" +
+                    "\"initialTerm\": \"" + initialTerm + "\",\n" +
+                    "\"targetTerm\": \""  + targetTerm  + "\",\n" +
+                    "\"steps\": [" + steps + "]\n" +
+                    crash +
+                    "}\n";
+            ruleProfs.add(jsonRuleProve);
+        }
     }
 
     public static void saveCrashTerm(Exception e) {
