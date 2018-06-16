@@ -3,11 +3,14 @@ package org.kframework;
 
 import org.kframework.definition.Module;
 import org.kframework.kore.K;
+import org.kframework.builtin.Sorts;
 import org.kframework.krun.ColorSetting;
 import org.kframework.krun.KRun;
 import org.kframework.parser.concrete2kore.generator.RuleGrammarGenerator;
 import org.kframework.unparser.OutputModes;
 import org.kframework.unparser.ToJson;
+
+import static org.kframework.kore.KORE.KToken;
 
 import org.apache.commons.io.output.WriterOutputStream;
 import java.io.FileNotFoundException;
@@ -127,43 +130,20 @@ public class Debugg {
         System.out.println(KRun.getString(Debugg.module, Debugg.output, Debugg.print, term, Debugg.colorize));
     }
 
-    private static String z3OnStepLeft;
-    private static String z3OnStepRight;
-    private static String z3OnStepQueryString;
+    private static String z3OnStepLeftId;
+    private static String z3OnStepRightId;
+    private static String z3OnStepQueryId;
     public static void z3OnStep(K left, K right) {
-        z3OnStepLeft = KRun.getString(Debugg.module, Debugg.output, Debugg.print, left, Debugg.colorize)
-                .replaceAll("\"","\\\\\"")
-                .replaceAll("\n","\\\\n");
-        z3OnStepRight = KRun.getString(Debugg.module, Debugg.output, Debugg.print, right, Debugg.colorize)
-                .replaceAll("\"","\\\\\"")
-                .replaceAll("\n","\\\\n");
+        z3OnStepLeftId  = writeJsonFile(left);
+        z3OnStepRightId = writeJsonFile(right);
     }
     public static void z3OnStepQuery(String query) {
-        z3OnStepQueryString = query
-                .replaceAll("\"","\\\\\"")
-                .replaceAll("\n","\\\\n");
+        z3OnStepQueryId = writeJsonFile(KToken(query, Sorts.Z3Query()));
     }
     public static void z3OnStepFinish(String result) {
-        result = result
-                .replaceAll("\"","\\\\\"")
-                .replaceAll("\n","\\\\n");
-        String json = "{\n"
-                // + "\"rules\": "  + "{\n" + rules + "\n},\n"
-                //+ "\"nodes\": "  + "{\n" + nodes + "\n},\n"
-                + "\"left\": \"" + z3OnStepLeft + "\",\n"
-                + "\"right\": \"" + z3OnStepRight + "\",\n"
-                + "\"query\": \"" + z3OnStepQueryString + "\",\n"
-                + "\"result\": \"" + result + "\"\n"
-                + "}\n";
-        String json_key = Integer.toHexString(json.hashCode());
-        try {
-            Debugg.writer = new PrintWriter("circc/" + json_key + ".json");
-            Debugg.writer.println(json);
-            Debugg.writer.close();
-            System.out.println("z3feedback " + Debugg.currentTerm + " " + json_key);
-        } catch (FileNotFoundException e) {
-            e.printStackTrace();
-        }
+        String z3OnStepResultId = writeJsonFile(KToken(result, Sorts.Z3Result()));
+        String z3QueryDescriptor = String.join("_", z3OnStepLeftId, z3OnStepRightId, z3OnStepQueryId, z3OnStepResultId);
+        System.out.println("z3feedback " + Debugg.currentTerm + " " + z3QueryDescriptor);
     }
 
     public static K abstractionPass(K contents) {
