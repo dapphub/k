@@ -63,7 +63,7 @@ public class Debugg {
                                                        "<coinbase>", "<stateRoot>", "<transactionsRoot>", "<receiptsRoot>",
                                                        "<logsBloom>", "<difficulty>", "<number>", "<gasLimit>",
                                                        "<gasUsed>", "<timestamp>", "<extraData>", "<mixHash>",
-                                                       "<blockNonce>", "<ommerBlockHeaders>", "<blockhash>", "<network>", "#And")
+                                                       "<blockNonce>", "<ommerBlockHeaders>", "<blockhash>", "<network>", "#And", "_==K_")
                                                     .collect(Collectors.toSet());
 
     public static void init(Module module, OutputModes output, Consumer<byte[]> print, ColorSetting colorize) {
