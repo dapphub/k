@@ -84,6 +84,10 @@ public class Debugg {
         Debugg.writtenCodes = new HashSet<String>();
     }
 
+    public enum DebuggLogEvents {
+        INIT, TARGET, NODE, Z3QUERY, STEP, RSTEP, NEWRULE, CRASH;
+    }
+
     public static void step(String s) {
         cstep = s;
   //      System.out.println("STEPP: "+s);
