@@ -274,9 +274,26 @@ public class Debugg {
     }
 
     public static void circProve(K left, K right) {
-        String lhsKey = writeJsonFile(left);
-        String rhsKey = writeJsonFile(right);
-        System.out.println("circc " + Debugg.currentTerm + "_" + lhsKey + "_" + rhsKey);
+        String lhs = KRun.getString(Debugg.unparsingModule, Debugg.output, Debugg.print, left, Debugg.colorize);
+        String rhs = KRun.getString(Debugg.unparsingModule, Debugg.output, Debugg.print, right, Debugg.colorize);
+        if(Debugg.circWatcher && Debugg.specRule) {
+            String circc = "{\n" +
+                    "\"term\": \"" + Debugg.currentTerm + "\"," +
+                    "\"lhs\":  \"" + lhs +"\"," +
+                    "\"rhs\": \"" + rhs + "\""  +
+                    "}";
+            String circc_key = Integer.toHexString(circc.hashCode());
+
+            try {
+                Debugg.writer = new PrintWriter("circc/" + circc_key + ".json");
+                Debugg.writer.println(circc);
+                Debugg.writer.close();
+            } catch (FileNotFoundException e) {
+                e.printStackTrace();
+            }
+            System.out.println("circc " + circc_key);
+
+        }
     }
 
     public static void setCircWatcher(boolean circ) {
