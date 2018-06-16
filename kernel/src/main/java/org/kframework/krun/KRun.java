@@ -215,6 +215,7 @@ public class KRun {
         prettyPrint(module, output, print, abstractKLabels(module, result, lossyKLabels), colorize);
     }
 
+    // TODO: find a better place for this
     public static K abstractTerm(Module module, K k) {
         Module unparsingModule = RuleGrammarGenerator.getCombinedGrammar(module, false).getExtensionModule();
         String abstractedTerm  = unparseTerm(k, unparsingModule, ColorSetting.OFF);
