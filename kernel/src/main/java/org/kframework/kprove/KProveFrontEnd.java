@@ -5,7 +5,6 @@ import com.google.common.collect.ImmutableList;
 import com.google.inject.Inject;
 import com.google.inject.Module;
 import com.google.inject.Provider;
-import org.kframework.Debugg;
 import org.kframework.compile.Backend;
 import org.kframework.kompile.CompiledDefinition;
 import org.kframework.krun.KRun;
@@ -16,6 +15,7 @@ import org.kframework.krun.modes.ExecutionMode;
 import org.kframework.main.FrontEnd;
 import org.kframework.main.GlobalOptions;
 import org.kframework.rewriter.Rewriter;
+import org.kframework.unparser.KPrint;
 import org.kframework.utils.Stopwatch;
 import org.kframework.utils.errorsystem.KEMException;
 import org.kframework.utils.errorsystem.KExceptionManager;
@@ -92,14 +92,9 @@ public class KProveFrontEnd extends FrontEnd {
                 throw KEMException.criticalError("Definition file doesn't exist: " +
                         kproveOptions.specFile(files).getAbsolutePath());
             }
-            return new KProve(kem, sw, files, tty).run(kproveOptions,
-                    compiledDef.get(),
-                    backend.get(), initializeRewriter.get());
-        } catch(Exception e) {
-            Debugg.saveCrashTerm(e);
-            throw e;
+            KPrint kprint = new KPrint(kem, files, tty, kproveOptions.print);
+            return new KProve(kem, sw, files, tty, kprint).run(kproveOptions, compiledDef.get(), backend.get(), initializeRewriter.get());
         } finally {
-            Debugg.endProveRule();
             scope.exit();
         }
     }

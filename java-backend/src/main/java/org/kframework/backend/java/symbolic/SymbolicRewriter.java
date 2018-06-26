@@ -27,12 +27,16 @@ import org.kframework.backend.java.kil.TermContext;
 import org.kframework.backend.java.kil.Variable;
 import org.kframework.backend.java.strategies.TransitionCompositeStrategy;
 import org.kframework.builtin.KLabels;
+import org.kframework.builtin.Sorts;
 import org.kframework.kore.FindK;
 import org.kframework.kore.K;
 import org.kframework.kore.KApply;
+import org.kframework.kore.KRewrite;
 import org.kframework.kore.KORE;
 import org.kframework.rewriter.SearchType;
 import org.kframework.backend.java.utils.BitSet;
+
+import static org.kframework.kore.KORE.KRewrite;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -147,6 +151,10 @@ public class SymbolicRewriter {
         throw new UnsupportedOperationException();
     }
 
+    private static K ruleToKRewrite(Rule rule) {
+        return KRewrite(rule.leftHandSide(), rule.rightHandSide(), rule.att());
+    }
+
     public List<ConstrainedTerm> fastComputeRewriteStep(ConstrainedTerm subject, boolean computeOne, boolean narrowing, boolean proofFlag) {
         List<ConstrainedTerm> results = new ArrayList<>();
         if (definition.automaton == null) {
@@ -163,7 +171,7 @@ public class SymbolicRewriter {
                 subject.termContext());
         for (FastRuleMatcher.RuleMatchResult matchResult : matches) {
             Rule rule = definition.ruleTable.get(matchResult.ruleIndex);
-            Debugg.setCurrentRule(rule.att().toString());
+            Debugg.log(Debugg.LogEvent.RULE, ruleToKRewrite(rule));
             Substitution<Variable, Term> substitution =
                     rule.att().contains(Att.refers_THIS_CONFIGURATION()) ?
                             matchResult.constraint.substitution().plus(new Variable(KLabels.THIS_CONFIGURATION, Sort.KSEQUENCE), filterOurStrategyCell(subject.term())) :
@@ -219,10 +227,6 @@ public class SymbolicRewriter {
                 continue;
             }
 
-            String rule_key = Integer.toHexString(matchResult.ruleIndex);
-            Debugg.pushTmpRule(rule_key);
-            Debugg.addRule(rule_key, rule.att().toString());
-            //Debugg.addStepRule(subject.term(), result.term(), subject.constraint(), result.constraint(), rule_key);
             results.add(result);
         }
 
@@ -593,37 +597,20 @@ public class SymbolicRewriter {
 
         initialTerm = initialTerm.expandPatterns(true);
 
-        Debugg.setUpProveRule();
-        Debugg.setInitialTerm(initialTerm.term(), initialTerm.constraint());
-        Debugg.setTargetTerm(targetTerm.term(), targetTerm.constraint());
-       // Debugg.setSpecRules(specRules);
+        Debugg.log(Debugg.LogEvent.INIT,   initialTerm.term(), initialTerm.constraint());
+        Debugg.log(Debugg.LogEvent.TARGET, targetTerm.term(),  targetTerm.constraint());
 
         visited.add(initialTerm);
         queue.add(initialTerm);
         boolean guarded = false;
         int step = 0;
 
-        // XXX - each term in the queue has to imply the target term
         while (!queue.isEmpty()) {
             step++;
-            Debugg.step(Integer.toString(step));
             for (ConstrainedTerm term : queue) {
-                String kcontent = term.term().getCellContentsByName("<k>").get(0).toString();
-                if(kcontent.equals("#execute_EVM(.KList)")) {
-                    Debugg.setCurrentTerm(term.term(), term.constraint(), true);
-                    String currpc = term.term().getCellContentsByName("<pc>").get(0).toString();
-                    String initpc = initialTerm.term().getCellContentsByName("<pc>").get(0).toString();
-                    String targetpc = targetTerm.term().getCellContentsByName("<pc>").get(0).toString();
-                    boolean circ = (currpc.equals(initpc) || currpc.equals(targetpc)) && guarded;
-                    Debugg.setCircWatcher(circ);
-                } else {
-                    Debugg.setCurrentTerm(term.term(), term.constraint(), false);
-                    Debugg.setCircWatcher(false);
-                }
-                Debugg.specialTerm(kcontent);
+                Debugg.log(Debugg.LogEvent.NODE, term.term(), term.constraint());
                 if (term.implies(targetTerm)) {
-                    //String cconst = KILtoSMTLib.translateConstraint(term.constraint());
-                    Debugg.addStep(term.term(), targetTerm.term(), term.constraint(), targetTerm.constraint());
+                    Debugg.log(Debugg.LogEvent.IMPLIESTARGET, term.term(), term.constraint());
                     continue;
                 }
 
@@ -656,7 +643,6 @@ public class SymbolicRewriter {
                     }
                 }
 
-                Debugg.resetTmpRules();
                 List<ConstrainedTerm> results = fastComputeRewriteStep(term, false, true, true);
                 if (results.isEmpty()) {
                     /* final term */
@@ -683,8 +669,6 @@ public class SymbolicRewriter {
                 }
 
                 for (ConstrainedTerm cterm : results) {
-                    String cconst = KILtoSMTLib.translateConstraint(term.constraint());
-                    //Debugg.addStep(term.term(), cterm.term(), cconst);
                     ConstrainedTerm result = new ConstrainedTerm(
                             cterm.term(),
                             cterm.constraint().removeBindings(
@@ -692,16 +676,14 @@ public class SymbolicRewriter {
                                             cterm.constraint().substitution().keySet(),
                                             initialTerm.variableSet())),
                             cterm.termContext());
-                    String rule_key = Debugg.getTmpRule();
-                    Debugg.addStepRule(term.term(), result.term(), term.constraint(), result.constraint(), rule_key);
+                    Debugg.log(Debugg.LogEvent.RSTEP, term.term(), term.constraint(), result.term(), result.constraint());
                     if(results.size() > 1) {
-                        Debugg.branchingNode(result.term(), result.constraint());
+                        Debugg.log(Debugg.LogEvent.BRANCH, result.term(), result.constraint());
                     }
                     if (visited.add(result)) {
                         nextQueue.add(result);
                     }
                 }
-
             }
 
             /* swap the queues */
@@ -713,8 +695,6 @@ public class SymbolicRewriter {
             guarded = true;
         }
 
-        Debugg.endProveRule();
-
         return proofResults;
     }
 
@@ -724,13 +704,11 @@ public class SymbolicRewriter {
     private ConstrainedTerm applySpecRules(ConstrainedTerm constrainedTerm, List<Rule> specRules) {
         for (Rule specRule : specRules) {
             ConstrainedTerm pattern = specRule.createLhsPattern(constrainedTerm.termContext());
-            Debugg.setSpecRule(!specRule.att().contains("trusted"));
             ConjunctiveFormula constraint = constrainedTerm.matchImplies(pattern, true);
             if (constraint != null) {
                 ConstrainedTerm result = buildResult(specRule, constraint, null, true, constrainedTerm.termContext());
-                String rule_key = Integer.toHexString(specRule.att().toString().hashCode());
-                Debugg.addRule(rule_key, specRule.att().toString());
-                Debugg.addStepRule(constrainedTerm.term(), result.term(), constrainedTerm.constraint(), result.constraint(), rule_key);
+                Debugg.log(Debugg.LogEvent.RULE, ruleToKRewrite(specRule));
+                Debugg.log(Debugg.LogEvent.SRSTEP, constrainedTerm.term(), constrainedTerm.constraint(), result.term(), result.constraint());
                 return result;
             }
         }

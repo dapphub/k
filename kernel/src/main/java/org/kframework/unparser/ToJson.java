@@ -36,12 +36,7 @@ public class ToJson {
     public static void apply(OutputStream out, K k) {
         try {
             DataOutputStream data = new DataOutputStream(out);
-
-            Map<String, Boolean> properties = new HashMap<>(1);
-            properties.put(JsonGenerator.PRETTY_PRINTING, true);
-            JsonWriterFactory writerFactory = Json.createWriterFactory(properties);
-
-            JsonWriter jsonWriter = writerFactory.createWriter(data);
+            JsonWriter jsonWriter = Json.createWriter(data);
 
             JsonObjectBuilder kterm = Json.createObjectBuilder();
             kterm.add("format", "KAST");
@@ -67,7 +62,7 @@ public class ToJson {
         this.data = data;
     }
 
-    private static JsonStructure toJson(K k) throws IOException {
+    private static JsonStructure toJson(K k) {
         JsonObjectBuilder knode = Json.createObjectBuilder();
         if (k instanceof KToken) {
             KToken tok = (KToken) k;
