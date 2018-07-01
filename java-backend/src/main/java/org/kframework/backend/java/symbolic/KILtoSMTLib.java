@@ -79,8 +79,6 @@ public class    KILtoSMTLib extends CopyOnWriteTransformer {
             ">=",
             ">",
             "^",
-            "expFunc",
-            "pow256",
             /* extra int theory */
             "int_max",
             "int_min",
@@ -254,7 +252,7 @@ public class    KILtoSMTLib extends CopyOnWriteTransformer {
         List<KLabelConstant> functions = new ArrayList<>();
         for (KLabelConstant kLabel : definition.kLabels()) {
             String smtlib = kLabel.getAttr(Attribute.SMTLIB_KEY);
-            if (smtlib != null && !SMTLIB_BUILTIN_FUNCTIONS.contains(smtlib) && !smtlib.startsWith("(")) {
+            if (smtlib != null && !SMTLIB_BUILTIN_FUNCTIONS.contains(smtlib) && !this.krunOptions.experimental.smt.excludeSmtlib.contains(smtlib) && !smtlib.startsWith("(")) {
                 functions.add(kLabel);
                 assert kLabel.signatures().size() == 1;
                 SortSignature signature = kLabel.signatures().iterator().next();

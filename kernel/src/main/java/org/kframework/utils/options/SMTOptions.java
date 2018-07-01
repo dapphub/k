@@ -5,6 +5,8 @@ import com.beust.jcommander.Parameter;
 import com.google.inject.Inject;
 
 import java.io.Serializable;
+import java.util.ArrayList;
+import java.util.List;
 
 public class SMTOptions implements Serializable {
 
@@ -52,4 +54,8 @@ public class SMTOptions implements Serializable {
 
     @Parameter(names="--z3-tactic", description="The solver tactic to use to check satisfiability in Z3.")
     public String z3Tactic;
+
+    @Parameter(names="--exclude-smtlib-tags", description="Exclude certain smtlib tags.",
+            listConverter=StringListConverter.class)
+    public List<String> excludeSmtlib = new ArrayList<String>();
 }
