@@ -56,6 +56,8 @@ public class    KILtoSMTLib extends CopyOnWriteTransformer {
             Sort.of(KORE.Sort("FloatSeq")),
             Sort.of(KORE.Sort("StringSeq")));
     public static final ImmutableSet<String> SMTLIB_BUILTIN_FUNCTIONS = ImmutableSet.of(
+            "expFunc",
+            "pow256",
             "forall",
             "exists",
             /* core theory */
