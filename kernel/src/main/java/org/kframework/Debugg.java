@@ -39,6 +39,7 @@ public class Debugg {
     private static PrintWriter sessionLog;
     private static String      currentTerm;
     private static String      currentRule;
+    private static String      currentQuery;
     private static long        startTime;
 
     public static void init(KProveOptions kproveOptions, FileUtil files, Module specModule, Module parsingModule, KPrint kprint) {
@@ -70,6 +71,7 @@ public class Debugg {
 
         Debugg.currentTerm = "NOTERM";
         Debugg.currentRule = "NORULE";
+        Debugg.currentQuery = "NOQUERY";
         Debugg.startTime   = System.currentTimeMillis();
     }
 
@@ -127,10 +129,11 @@ public class Debugg {
                 logPrefix = "implication";
                 break;
             case Z3QUERY:
+                currentQuery = nodeId;
                 logPrefix = "z3query";
                 break;
             case Z3RESULT:
-                logPrefix = "z3result";
+                logPrefix = "z3result " + currentQuery;
                 break;
             case STEP:
                 logPrefix = "step";
