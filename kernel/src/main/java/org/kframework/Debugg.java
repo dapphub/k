@@ -32,6 +32,7 @@ public class Debugg {
     private static KPrint   kprint;
     private static boolean  loggingOn;
 
+    private static String      loggingPath;
     private static String      sessionId;
     private static File        sessionDir;
     private static File        nodesDir;
@@ -40,8 +41,8 @@ public class Debugg {
     private static String      currentRule;
     private static long        startTime;
 
-    public static void init(KProveOptions options, FileUtil files, Module specModule, Module parsingModule, KPrint kprint, boolean loggingOn) {
-        Debugg.loggingOn = loggingOn;
+    public static void init(KProveOptions kproveOptions, FileUtil files, Module specModule, Module parsingModule, KPrint kprint) {
+        Debugg.loggingOn = kproveOptions.debugg;
         if (! Debugg.loggingOn) return;
 
         Debugg.files         = files;
@@ -49,28 +50,22 @@ public class Debugg {
         Debugg.parsingModule = parsingModule;
         Debugg.kprint        = kprint;
 
+        Debugg.loggingPath = kproveOptions.debuggPath;
         try {
             Debugg.sessionId  = Integer.toString(Math.abs(Debugg.specModule.hashCode()));
-            Debugg.sessionDir = files.resolveKompiled(sessionId + ".debugg");
-            String path          = sessionDir.getAbsolutePath();
-            if(options.debuggPath != null) {
-                path = options.debuggPath;
-            }
-            Debugg.nodesDir   = new File(path, "nodes/");
+            Debugg.sessionDir = kproveOptions.debuggPath == null ? files.resolveKompiled(sessionId + ".debugg") : new File(kproveOptions.debuggPath);
+            String path       = sessionDir.getAbsolutePath();
+            Debugg.nodesDir   = new File(Debugg.sessionDir, "nodes/");
             Debugg.nodesDir.mkdirs();
-            Debugg.sessionLog = new PrintWriter(path + "/debugg.log");
-            if(options.debuggPath != null) {
-                System.out.println("run");
-            } else {
-                System.out.println(path);
-            }
+            Debugg.sessionLog = new PrintWriter(Debugg.sessionDir.getAbsolutePath() + "/debugg.log");
+            System.out.println("Debugg: " + Debugg.sessionDir.getAbsolutePath());
         } catch (FileNotFoundException e) {
             e.printStackTrace();
         }
 
-        if (KPrint.options.output == OutputModes.PRETTY) {
+        if (Debugg.kprint.options.output == OutputModes.PRETTY) {
             System.err.println("Cannot output in `pretty` mode when using Debugg. Defaulting to `json`.");
-            KPrint.options.output = OutputModes.JSON;
+            Debugg.kprint.options.output = OutputModes.JSON;
         }
 
         Debugg.currentTerm = "NOTERM";
@@ -158,11 +153,11 @@ public class Debugg {
 
     private static String writeNode(K contents) {
         String fileCode   = Integer.toString(Math.abs(contents.hashCode()));
-        File   outputFile = new File(Debugg.nodesDir, fileCode + "." + KPrint.options.output.ext());
+        File   outputFile = new File(Debugg.nodesDir, fileCode + "." + Debugg.kprint.options.output.ext());
         if (! outputFile.exists()) {
             try {
                 PrintWriter fOut = new PrintWriter(outputFile);
-                fOut.println(new String(KPrint.prettyPrint(Debugg.parsingModule, contents), StandardCharsets.UTF_8));
+                fOut.println(new String(Debugg.kprint.prettyPrint(Debugg.parsingModule, contents), StandardCharsets.UTF_8));
                 fOut.close();
             } catch (FileNotFoundException e) {
                 System.err.println("Could not open node output file: " + outputFile.getAbsolutePath());
