@@ -9,11 +9,13 @@ import com.google.common.collect.Multisets;
 import com.google.common.collect.Sets;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.commons.lang3.tuple.Triple;
+import org.kframework.Debugg;
 import org.kframework.attributes.Att;
 import org.kframework.backend.java.builtins.BoolToken;
 import org.kframework.backend.java.compile.KOREtoBackendKIL;
 import org.kframework.backend.java.kil.*;
 import org.kframework.builtin.KLabels;
+import org.kframework.kore.K;
 import org.kframework.kore.KApply;
 import org.kframework.backend.java.utils.BitSet;
 
@@ -30,6 +32,7 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 import static org.kframework.Collections.*;
+import static org.kframework.kore.KORE.KRewrite;
 
 /**
  * A very fast interpreted matching implementation based on merging the rules into a decision-tree like structure.
@@ -99,6 +102,7 @@ public class FastRuleMatcher {
                 continue;
             }
 
+            Debugg.log(Debugg.LogEvent.RULE, ruleToKRewrite(rule));
             // TODO(YilongL): remove TermContext from the signature once
             // ConstrainedTerm doesn't hold a TermContext anymore
             /* TODO(AndreiS): remove this hack for super strictness after strategies work */
@@ -133,6 +137,10 @@ public class FastRuleMatcher {
         } else {
             return transitionResults;
         }
+    }
+
+    private K ruleToKRewrite(Rule rule) {
+        return KRewrite(rule.leftHandSide(), rule.rightHandSide(), rule.att());
     }
 
     public static class RuleMatchResult {

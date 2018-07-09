@@ -171,7 +171,6 @@ public class SymbolicRewriter {
                 subject.termContext());
         for (FastRuleMatcher.RuleMatchResult matchResult : matches) {
             Rule rule = definition.ruleTable.get(matchResult.ruleIndex);
-            Debugg.log(Debugg.LogEvent.RULE, ruleToKRewrite(rule));
             Substitution<Variable, Term> substitution =
                     rule.att().contains(Att.refers_THIS_CONFIGURATION()) ?
                             matchResult.constraint.substitution().plus(new Variable(KLabels.THIS_CONFIGURATION, Sort.KSEQUENCE), filterOurStrategyCell(subject.term())) :
@@ -215,9 +214,11 @@ public class SymbolicRewriter {
             if (!matchResult.isMatching) {
                 // TODO(AndreiS): move these some other place
                 result = result.expandPatterns(true);
+                Debugg.log(Debugg.LogEvent.MATCHRULE, ruleToKRewrite(rule));
                 if (result.constraint().isFalse() || result.constraint().checkUnsat()) {
                     continue;
                 }
+                Debugg.resetMatchrule();
             }
 
             /* TODO(AndreiS): remove this hack for super strictness after strategies work */
@@ -704,7 +705,10 @@ public class SymbolicRewriter {
     private ConstrainedTerm applySpecRules(ConstrainedTerm constrainedTerm, List<Rule> specRules) {
         for (Rule specRule : specRules) {
             ConstrainedTerm pattern = specRule.createLhsPattern(constrainedTerm.termContext());
+
+            Debugg.log(Debugg.LogEvent.MATCHRULE, ruleToKRewrite(specRule));
             ConjunctiveFormula constraint = constrainedTerm.matchImplies(pattern, true);
+            Debugg.resetMatchrule();
             if (constraint != null) {
                 ConstrainedTerm result = buildResult(specRule, constraint, null, true, constrainedTerm.termContext());
                 Debugg.log(Debugg.LogEvent.RULE, ruleToKRewrite(specRule));

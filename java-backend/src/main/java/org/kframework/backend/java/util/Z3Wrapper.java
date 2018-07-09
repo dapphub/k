@@ -52,7 +52,6 @@ public class Z3Wrapper {
     }
 
     public synchronized boolean isUnsat(String query, int timeout) {
-        Debugg.log(Debugg.LogEvent.Z3QUERY, KToken(query, Sorts.Z3Query()));
         if (options.z3Executable) {
             return checkQueryWithExternalProcess(query, timeout);
         } else {
@@ -81,6 +80,7 @@ public class Z3Wrapper {
 
     private boolean checkQueryWithExternalProcess(String query, int timeout) {
         String result = "";
+        Debugg.log(Debugg.LogEvent.Z3QUERY, KToken(SMT_PRELUDE + query + CHECK_SAT + "\n", Sorts.Z3Query()));
         try {
             for (int i = 0; i < Z3_RESTART_LIMIT; i++) {
                 ProcessBuilder pb = files.getProcessBuilder().command(
