@@ -1,4 +1,4 @@
-// Copyright (c) 2015-2016 K Team. All Rights Reserved.
+// Copyright (c) 2015-2018 K Team. All Rights Reserved.
 
 // Module defining only the sorts K and KString, useful for modularity
 module SORT-K
@@ -7,10 +7,9 @@ endmodule
 
 module BASIC-K
   imports SORT-K
-  syntax KLabel
   syntax KItem [hook(K.KItem)]
   syntax K     ::= KItem
-  syntax KConfigVar
+  syntax KConfigVar [token]
 endmodule
 
 module KSTRING
@@ -194,6 +193,12 @@ module RULE-LISTS
   // adds the subsort production to the parsing module only:
   // Es ::= E        [userList("*")]
 
+endmodule
+
+module DEFAULT-LAYOUT
+    syntax #Layout ::= r"(\\/\\*([^\\*]|(\\*+([^\\*\\/])))*\\*+\\/)"
+                     | r"(\\/\\/[^\\n\\r]*)"
+                     | r"([\\ \\n\\r\\t])"
 endmodule
 
 module DEFAULT-CONFIGURATION

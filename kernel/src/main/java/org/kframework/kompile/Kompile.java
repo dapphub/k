@@ -1,4 +1,4 @@
-// Copyright (c) 2015-2016 K Team. All Rights Reserved.
+// Copyright (c) 2015-2018 K Team. All Rights Reserved.
 package org.kframework.kompile;
 
 import com.google.inject.Inject;
@@ -15,6 +15,7 @@ import org.kframework.compile.checks.CheckRewrite;
 import org.kframework.compile.checks.CheckSortTopUniqueness;
 import org.kframework.compile.checks.CheckStreams;
 import org.kframework.definition.*;
+import org.kframework.definition.Module;
 import org.kframework.kore.Sort;
 import org.kframework.main.GlobalOptions;
 import org.kframework.parser.concrete2kore.ParserUtils;
@@ -85,12 +86,12 @@ public class Kompile {
         kompileOptions.outerParsing.includes = lookupDirectories.stream().map(File::getAbsolutePath).collect(Collectors.toList());
         this.definitionParsing = new DefinitionParsing(
                 lookupDirectories, kompileOptions.strict(), kem,
-                parser, cacheParses, files.resolveKompiled("cache.bin"), !kompileOptions.outerParsing.noPrelude);
+                parser, cacheParses, files.resolveKompiled("cache.bin"), !kompileOptions.outerParsing.noPrelude, kompileOptions.isKore());
         this.sw = sw;
     }
 
     public CompiledDefinition run(File definitionFile, String mainModuleName, String mainProgramsModuleName) {
-        return run(definitionFile, mainModuleName, mainProgramsModuleName, defaultSteps(kompileOptions, kem, Collections.emptySet()));
+        return run(definitionFile, mainModuleName, mainProgramsModuleName, defaultSteps(kompileOptions, kem, files, Collections.emptySet()));
     }
 
     /**
@@ -129,7 +130,7 @@ public class Kompile {
         return input;
     }
 
-    private static Definition resolveIOStreams(KExceptionManager kem,Definition d) {
+    public static Definition resolveIOStreams(KExceptionManager kem,Definition d) {
         return DefinitionTransformer.from(new ResolveIOStreams(d, kem)::resolve, "resolving io streams")
                 .andThen(DefinitionTransformer.from(Kompile::filterStreamModules, "resolving io streams"))
                 .apply(d);
@@ -140,11 +141,11 @@ public class Kompile {
         return Module(mod.name(), immutable(newImports), mod.localSentences(), mod.att());
     }
 
-    private static DefinitionTransformer excludeModulesByTag(Set<String> excludedModuleTags, Definition d) {
+    public static DefinitionTransformer excludeModulesByTag(Set<String> excludedModuleTags, Definition d) {
         return DefinitionTransformer.from(mod -> excludeModulesByTag(excludedModuleTags, mod), "remove modules based on attributes");
     }
 
-    public static Function<Definition, Definition> defaultSteps(KompileOptions kompileOptions, KExceptionManager kem, Set<String> excludedModuleTags) {
+    public static Function<Definition, Definition> defaultSteps(KompileOptions kompileOptions, KExceptionManager kem, FileUtil files, Set<String> excludedModuleTags) {
         DefinitionTransformer resolveStrict = DefinitionTransformer.from(new ResolveStrict(kompileOptions)::resolve, "resolving strict and seqstrict attributes");
         DefinitionTransformer resolveHeatCoolAttribute = DefinitionTransformer.fromSentenceTransformer(new ResolveHeatCoolAttribute(new HashSet<>(kompileOptions.transition))::resolve, "resolving heat and cool attributes");
         DefinitionTransformer resolveAnonVars = DefinitionTransformer.fromSentenceTransformer(new ResolveAnonVar()::resolve, "resolving \"_\" vars");
@@ -153,6 +154,9 @@ public class Kompile {
         DefinitionTransformer resolveFun = DefinitionTransformer.from(new ResolveFun()::resolve, "resolving #fun");
         DefinitionTransformer generateSortPredicateSyntax = DefinitionTransformer.from(new GenerateSortPredicateSyntax()::gen, "adding sort predicate productions");
         DefinitionTransformer subsortKItem = DefinitionTransformer.from(Kompile::subsortKItem, "subsort all sorts to KItem");
+        GenerateCoverage cov = new GenerateCoverage(kompileOptions.coverage, files);
+        DefinitionTransformer genCoverage = DefinitionTransformer.fromRuleBodyTransformerWithRule(cov::gen, "generate coverage instrumentation");
+        DefinitionTransformer numberSentences = DefinitionTransformer.fromSentenceTransformer(new NumberSentences()::number, "number sentences uniquely");
 
         return def -> excludeModulesByTag(excludedModuleTags, def)
                 .andThen(d -> Kompile.resolveIOStreams(kem, d))
@@ -160,6 +164,7 @@ public class Kompile {
                 .andThen(resolveStrict)
                 .andThen(resolveAnonVars)
                 .andThen(d -> new ResolveContexts(kompileOptions).resolve(d))
+                .andThen(numberSentences)
                 .andThen(resolveHeatCoolAttribute)
                 .andThen(resolveSemanticCasts)
                 .andThen(generateSortPredicateSyntax)
@@ -167,12 +172,14 @@ public class Kompile {
                 .andThen(AddImplicitComputationCell::transformDefinition)
                 .andThen(new Strategy(kompileOptions.experimental.heatCoolStrategies).addStrategyCellToRulesTransformer())
                 .andThen(ConcretizeCells::transformDefinition)
+                .andThen(genCoverage)
+                .andThen(d -> { cov.close(); return d; })
                 .andThen(subsortKItem)
                 .andThen(Kompile::addSemanticsModule)
                 .apply(def);
     }
 
-    private static Module subsortKItem(Module module) {
+    public static Module subsortKItem(Module module) {
         java.util.Set<Sentence> prods = new HashSet<>();
         for (Sort srt : iterable(module.definedSorts())) {
             if (!RuleGrammarGenerator.isParserSort(srt)) {
@@ -234,7 +241,7 @@ public class Kompile {
         }
     }
 
-    private static Definition addSemanticsModule(Definition d) {
+    public static Definition addSemanticsModule(Definition d) {
         java.util.Set<Module> allModules = mutable(d.modules());
 
         Module languageParsingModule = Constructors.Module("LANGUAGE-PARSING",
@@ -245,7 +252,7 @@ public class Kompile {
         return Constructors.Definition(d.mainModule(), immutable(allModules), d.att());
     }
 
-    private static Definition resolveFreshConstants(Definition input) {
+    public static Definition resolveFreshConstants(Definition input) {
         return DefinitionTransformer.from(new ResolveFreshConstants(input)::resolve, "resolving !Var variables")
                 .apply(input);
     }

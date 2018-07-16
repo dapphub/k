@@ -1,4 +1,4 @@
-// Copyright (c) 2015-2016 K Team. All Rights Reserved.
+// Copyright (c) 2015-2018 K Team. All Rights Reserved.
 package org.kframework.backend.java.symbolic;
 
 import com.google.common.collect.HashMultimap;
@@ -7,10 +7,12 @@ import com.google.common.collect.Multimap;
 import com.google.common.collect.Sets;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.commons.lang3.tuple.Triple;
+import org.kframework.Debugg;
 import org.kframework.backend.java.builtins.BoolToken;
 import org.kframework.backend.java.kil.*;
 import org.kframework.backend.java.util.Constants;
 import org.kframework.backend.java.util.RewriteEngineUtils;
+import org.kframework.builtin.KLabels;
 
 import java.util.Collection;
 import java.util.Collections;
@@ -679,6 +681,7 @@ public class ConjunctiveFormula extends Term implements CollectionInternalRepres
             if (global.globalOptions.debug) {
                 System.err.println("Attempting to prove: \n\t" + left + "\n  implies \n\t" + right);
             }
+            Debugg.log(Debugg.LogEvent.IMPLICATION, left, right);
 
             right = right.orientSubstitution(rightOnlyVariables);
             right = left.simplifyConstraint(right);
@@ -704,6 +707,7 @@ public class ConjunctiveFormula extends Term implements CollectionInternalRepres
                 implications.add(Pair.of(left.add(condition, BoolToken.FALSE).simplify(context), right));
                 continue;
             }
+
 
             if (!impliesSMT(left, right, rightOnlyVariables)) {
                 if (global.globalOptions.debug) {
@@ -807,12 +811,12 @@ public class ConjunctiveFormula extends Term implements CollectionInternalRepres
 
     @Override
     public KLabel constructorLabel() {
-        return KLabelConstant.of("#And", global.getDefinition());
+        return KLabelConstant.of(KLabels.ML_AND, global.getDefinition());
     }
 
     @Override
     public KItem unit() {
-        return KItem.of(KLabelConstant.of("#True", global.getDefinition()), KList.EMPTY, global);
+        return KItem.of(KLabelConstant.of(KLabels.ML_TRUE, global.getDefinition()), KList.EMPTY, global);
     }
 
     @Override

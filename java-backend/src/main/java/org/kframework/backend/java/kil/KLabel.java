@@ -1,4 +1,4 @@
-// Copyright (c) 2013-2016 K Team. All Rights Reserved.
+// Copyright (c) 2013-2018 K Team. All Rights Reserved.
 package org.kframework.backend.java.kil;
 
 import org.kframework.backend.java.symbolic.Transformer;
@@ -70,4 +70,7 @@ public abstract class KLabel extends Term {
         return transformer.transform(this);
     }
 
+    public static org.kframework.kore.KLabel parse(String s) {
+        return org.kframework.kore.KORE.KLabel(s);
+    }
 }

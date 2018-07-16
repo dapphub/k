@@ -3,7 +3,7 @@ package org.kframework.kprove;
 import com.beust.jcommander.Parameter;
 import com.beust.jcommander.ParametersDelegate;
 import com.google.inject.Inject;
-import org.kframework.krun.PrettyPrintOptions;
+import org.kframework.unparser.PrintOptions;
 import org.kframework.main.GlobalOptions;
 import org.kframework.utils.errorsystem.KEMException;
 import org.kframework.utils.file.FileUtil;
@@ -43,7 +43,14 @@ public class KProveOptions {
     public SMTOptions smt = new SMTOptions();
 
     @ParametersDelegate
-    public PrettyPrintOptions prettyPrint = new PrettyPrintOptions();
+    public PrintOptions print = new PrintOptions();
+
+    // TODO: Should eventually allow this option in non-proof mode
+    @Parameter(names={"--debugg"}, description="Output proof debugging information")
+    public boolean debugg = false;
+
+    @Parameter(names={"--debugg-path"}, description="Path where the debugg output should be stored")
+    public String debuggPath;
 
     @Parameter(names={"--spec-module", "-sm"}, description="Name of module containing specification to prove")
     public String specModule;

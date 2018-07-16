@@ -1,4 +1,4 @@
-// Copyright (c) 2015-2016 K Team. All Rights Reserved.
+// Copyright (c) 2015-2018 K Team. All Rights Reserved.
 package org.kframework.krun.modes.DebugMode;
 
 import org.kframework.debugger.DebuggerMatchResult;
@@ -6,8 +6,10 @@ import org.kframework.debugger.DebuggerState;
 import org.kframework.debugger.KDebug;
 import org.kframework.kompile.CompiledDefinition;
 import org.kframework.krun.KRun;
-import org.kframework.krun.ColorSetting;
+import org.kframework.unparser.ColorSetting;
 import org.kframework.unparser.OutputModes;
+import org.kframework.unparser.PrintOptions;
+import org.kframework.unparser.KPrint;
 import org.kframework.utils.errorsystem.KEMException;
 
 import java.io.IOException;
@@ -81,7 +83,7 @@ public class Commands {
             CommandUtils utils = new CommandUtils(isSource);
             DebuggerState requestedState = session.getActiveState();
             if (requestedState != null) {
-                prettyPrint(compiledDefinition.languageParsingModule(), OutputModes.PRETTY, s -> utils.print(s), requestedState.getCurrentK(), ColorSetting.ON);
+                KPrint.prettyPrint(compiledDefinition.languageParsingModule(), s -> utils.print(s), requestedState.getCurrentK());
             } else {
                 throw KEMException.debuggerError("\"Requested State/Configuration Unreachable\",");
             }
@@ -199,7 +201,7 @@ public class Commands {
         public void runCommand(KDebug session, CompiledDefinition compiledDefinition, boolean isSource) {
             CommandUtils utils = new CommandUtils(isSource);
             if (checkpointInterval <= 0) {
-                KEMException.debuggerError("Checkpoint Value must be >= 1");
+                throw KEMException.debuggerError("Checkpoint Value must be >= 1");
             }
             session.setCheckpointInterval(checkpointInterval);
             utils.print("Checkpointing Interval set to " + checkpointInterval);
@@ -304,7 +306,7 @@ public class Commands {
             if (disableOutput) {
                 return;
             }
-            KRun.prettyPrint(compiledDefinition.languageParsingModule(), OutputModes.PRETTY, s -> System.out.println(s), result.getSubstitutions(), ColorSetting.ON);
+            KPrint.prettyPrint(compiledDefinition.languageParsingModule(), s -> System.out.println(s), result.getSubstitutions());
         }
 
         private void print(byte[] bytes){
@@ -312,7 +314,7 @@ public class Commands {
                 try {
                     System.out.write(bytes);
                 } catch (IOException e) {
-                    KEMException.debuggerError("IOError :" + e.getMessage());
+                    throw KEMException.debuggerError("IOError :" + e.getMessage());
                 }
             }
         }

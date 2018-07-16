@@ -64,6 +64,7 @@ public class OcamlBackend implements Backend {
             FileUtils.copyFile(files.resolveKBase("include/ocaml/marshalvalue.ml"), files.resolveKompiled("marshalvalue.ml"));
             FileUtils.copyFile(files.resolveKBase("include/ocaml/plugin.ml"), files.resolveKompiled("plugin.ml"));
             FileUtils.copyFile(files.resolveKBase("include/ocaml/load_terms.c"), files.resolveKompiled("load_terms.c"));
+            FileUtils.copyFile(files.resolveKBase("include/ocaml/fake_load_terms.c"), files.resolveKompiled("fake_load_terms.c"));
             String execution_pmg_ocaml = def.ocamlCompile(compiledDefinition.topCellInitializer, compiledDefinition.exitCodePattern, options.dumpExitCode);
             files.saveToKompiled("execution_pgm.ml", execution_pmg_ocaml);
 
@@ -161,7 +162,7 @@ public class OcamlBackend implements Backend {
 
     @Override
     public Function<Definition, Definition> steps() {
-        return Kompile.defaultSteps(kompileOptions, kem, excludedModuleTags());
+        return Kompile.defaultSteps(kompileOptions, kem, files, excludedModuleTags());
     }
 
     @Override

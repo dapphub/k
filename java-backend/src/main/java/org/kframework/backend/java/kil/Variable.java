@@ -1,4 +1,4 @@
-// Copyright (c) 2013-2016 K Team. All Rights Reserved.
+// Copyright (c) 2013-2018 K Team. All Rights Reserved.
 package org.kframework.backend.java.kil;
 
 import com.google.common.collect.BiMap;
@@ -8,11 +8,16 @@ import org.kframework.attributes.Att;
 import org.kframework.backend.java.symbolic.Transformer;
 import org.kframework.backend.java.symbolic.Visitor;
 import org.kframework.backend.java.util.Constants;
+import org.kframework.kore.ADT;
+import org.kframework.kore.K;
+import scala.collection.Seq;
 
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
+
+import static org.kframework.Collections.Seq;
 
 
 /**
@@ -66,6 +71,10 @@ public class Variable extends Term implements org.kframework.kore.KVariable {
     private final String name;
     private final Sort sort;
     private final boolean anonymous;
+
+    public String getOriginalName() {
+        return this.originalName;
+    }
 
     private final int ordinal;
 
@@ -121,6 +130,11 @@ public class Variable extends Term implements org.kframework.kore.KVariable {
         return name;
     }
 
+    @Override
+    public Seq<org.kframework.kore.Sort> params() {
+        return Seq();
+    }
+
     public boolean isAnonymous() {
         return anonymous;
     }
@@ -174,7 +188,7 @@ public class Variable extends Term implements org.kframework.kore.KVariable {
 
     @Override
     public String toString() {
-        return originalName + name + ":" + sort;
+        return originalName +"."+ name + ":" + sort;
     }
 
     @Override

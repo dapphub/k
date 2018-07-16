@@ -1,4 +1,4 @@
-// Copyright (c) 2015-2016 K Team. All Rights Reserved.
+// Copyright (c) 2015-2018 K Team. All Rights Reserved.
 package org.kframework.backend.java.symbolic;
 
 import org.kframework.main.GlobalOptions;
@@ -67,6 +67,7 @@ public class SMTOperations {
                         KILtoSMTLib.translateImplication(left, right, rightOnlyVariables),
                         smtOptions.z3ImplTimeout);
             } catch (UnsupportedOperationException | SMTTranslationFailure e) {
+                System.err.println(e.getMessage());
                 if (!smtOptions.ignoreMissingSMTLibWarning) {
                     kem.registerCriticalWarning(e.getMessage(), e);
                 }

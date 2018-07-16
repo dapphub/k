@@ -1,11 +1,13 @@
-// Copyright (c) 2015-2016 K Team. All Rights Reserved.
+// Copyright (c) 2015-2018 K Team. All Rights Reserved.
 package org.kframework.kprove;
 
 import com.google.inject.Inject;
 import org.apache.commons.io.FilenameUtils;
+import org.kframework.Debugg;
 import org.kframework.attributes.Att;
 import org.kframework.compile.*;
 import org.kframework.definition.*;
+import org.kframework.definition.Module;
 import org.kframework.kompile.CompiledDefinition;
 import org.kframework.kompile.Kompile;
 import org.kframework.kore.K;
@@ -18,6 +20,7 @@ import org.kframework.utils.errorsystem.KEMException;
 import org.kframework.utils.errorsystem.KExceptionManager;
 import org.kframework.utils.file.FileUtil;
 import org.kframework.utils.file.TTYInfo;
+import org.kframework.unparser.KPrint;
 import scala.Option;
 import scala.Tuple2;
 import scala.collection.Set;
@@ -40,20 +43,31 @@ public class KProve {
     private final Stopwatch sw;
     private final FileUtil files;
     private TTYInfo tty;
+    private KPrint kprint;
 
     @Inject
-    public KProve(KExceptionManager kem, Stopwatch sw, FileUtil files, TTYInfo tty) {
+    public KProve(KExceptionManager kem, Stopwatch sw, FileUtil files, TTYInfo tty, KPrint kprint) {
         this.kem = kem;
         this.sw = sw;
         this.files = files;
         this.tty = tty;
+        this.kprint = kprint;
     }
 
     public int run(KProveOptions options, CompiledDefinition compiledDefinition, Backend backend, Function<Module, Rewriter> rewriterGenerator) {
         Tuple2<Definition, Module> compiled = getProofDefinition(options.specFile(files), options.defModule, options.specModule, compiledDefinition, backend, options.global, files, kem, sw);
         Rewriter rewriter = rewriterGenerator.apply(compiled._1().mainModule());
         Module specModule = compiled._2();
-        K results = rewriter.prove(specModule);
+        Debugg.init(options, files, specModule, compiled._1().getModule("LANGUAGE-PARSING").get(), kprint, options.debugg);
+        Debugg.log("spec " + options.specFile(files).getAbsolutePath());
+        K results;
+        try {
+            results = rewriter.prove(specModule);
+        } catch (Exception e) {
+            Debugg.log(Debugg.LogEvent.CRASH);
+            Debugg.close();
+            throw e;
+        }
         int exit;
         if (results instanceof KApply) {
             KApply kapp = (KApply) results;
@@ -61,7 +75,8 @@ public class KProve {
         } else {
             exit = 1;
         }
-        KRun.prettyPrint(compiled._1().getModule("LANGUAGE-PARSING").get(), options.prettyPrint.output, s -> KRun.outputFile(s, options.prettyPrint, files), results, options.prettyPrint.color(tty.stdout, files.getEnv()));
+        kprint.prettyPrint(compiled._1().getModule("LANGUAGE-PARSING").get(), s -> kprint.outputFile(s), results);
+        Debugg.close();
         return exit;
     }
 
@@ -97,7 +112,7 @@ public class KProve {
         Module specModule = getModule(specModuleName, modulesMap, compiledDefinition.getParsedDefinition());
         specModule = backend.specificationSteps(compiledDefinition.kompiledDefinition).apply(specModule);
         specModule = spliceModule(specModule, compiledDefinition.kompiledDefinition);
-        Definition combinedDef = Definition.apply(defModule, (Set<Module>) immutable(modules).$bar(compiledDefinition.getParsedDefinition().entryModules()), Att.empty());
+        Definition combinedDef = Definition.apply(defModule, compiledDefinition.getParsedDefinition().entryModules(), Att.empty());
         Definition compiled = compileDefinition(backend, combinedDef);
         return Tuple2.apply(compiled, specModule);
     }

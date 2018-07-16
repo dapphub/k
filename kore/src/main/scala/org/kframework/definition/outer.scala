@@ -1,4 +1,4 @@
-// Copyright (c) 2014 K Team. All Rights Reserved.
+// Copyright (c) 2014-2018 K Team. All Rights Reserved.
 
 package org.kframework.definition
 
@@ -7,15 +7,17 @@ import javax.annotation.Nonnull
 
 import dk.brics.automaton.{BasicAutomata, RegExp, RunAutomaton, SpecialOperations}
 import org.kframework.POSet
-import org.kframework.attributes.Att
+import org.kframework.attributes.{Att, HasLocation, Location, Source}
 import org.kframework.definition.Constructors._
 import org.kframework.kore.Unapply.{KApply, KLabel}
+import org.kframework.kore
+import org.kframework.kore.KORE.Sort
 import org.kframework.kore._
 import org.kframework.utils.errorsystem.KEMException
+import org.kframework.builtin.Sorts
 
 import scala.annotation.meta.param
 import scala.collection.JavaConverters._
-
 import collection._
 import scala.collection.Set
 
@@ -56,7 +58,7 @@ case class Definition(
 trait Sorting {
   def computeSubsortPOSet(sentences: Set[Sentence]) = {
     val subsortRelations: Set[(Sort, Sort)] = sentences collect {
-      case Production(endSort, Seq(NonTerminal(startSort, _)), att) if !att.contains("klabel") => (startSort, endSort)
+      case Production(klabel, endSort, Seq(NonTerminal(startSort, _)), att) if klabel.isEmpty => (startSort, endSort)
     }
 
     POSet(subsortRelations)
@@ -97,9 +99,16 @@ case class Module(val name: String, val imports: Set[Module], localSentences: Se
       .groupBy(_.sort)
       .map { case (l, ps) => (l, ps) }
 
-  @transient
-  lazy val attForSort: Map[Sort, Att] =
-    productionsForSort mapValues {_ map {_.att} reduce {_.addAll(_)}}
+  lazy val layouts: Set[String] =
+    productionsForSort
+      .get(Sorts.Layout)
+      .getOrElse(Set[Production]())
+      .collect({
+          case Production(_, _, Seq(RegexTerminal(_, terminalRegex, _)), _) => terminalRegex
+          case p => throw KEMException.compilerError("Productions of sort `Layout` must be exactly one `RegexTerminal`.\nProduction: " + p.toString())
+      })
+
+  lazy val layout: String = "(" + layouts.mkString(")|(") + ")"
 
   @transient
   lazy val definedKLabels: Set[KLabel] =
@@ -134,6 +143,7 @@ case class Module(val name: String, val imports: Set[Module], localSentences: Se
       .groupBy(_.sort)
       .map { case (s, ps) => (s, ps.toList.sortBy(_.sort)(subsorts.asOrdering)) }
 
+  // TODO: should this use computeSubsortPOSet to get an actual GLB of the given sort?
   @transient lazy val sortFor: Map[KLabel, Sort] = productionsFor mapValues {_.head.sort}
 
   def optionSortFor(k: K): Option[Sort] = k match {
@@ -188,7 +198,7 @@ case class Module(val name: String, val imports: Set[Module], localSentences: Se
     .filter(s => s.name.endsWith("Cell") || s.name.endsWith("CellFragment"))
   }
 
-  lazy val listSorts: Set[Sort] = sentences.collect({ case Production(srt, _, att1) if att1.contains("userList") =>
+  lazy val listSorts: Set[Sort] = sentences.collect({ case Production(_, srt, _, att1) if att1.contains("userList") =>
     srt
   })
 
@@ -231,7 +241,7 @@ case class Module(val name: String, val imports: Set[Module], localSentences: Se
 
   // check that non-terminals have a defined sort
   def checkSorts () = sentences foreach {
-    case p@Production(_, items, _) =>
+    case p@Production(_, _, items, _) =>
       val res = items collect { case nt: NonTerminal if !definedSorts.contains(nt.sort) && !usedCellSorts.contains(nt.sort) => nt }
       if (res.nonEmpty)
         throw KEMException.compilerError("Could not find sorts: " + res.asJava, p)
@@ -247,27 +257,33 @@ case class Module(val name: String, val imports: Set[Module], localSentences: Se
 
 // hooked but different from core, Import is a sentence here
 
-trait Sentence {
+trait Sentence extends HasLocation {
   // marker
   val isSyntax: Boolean
   val isNonSyntax: Boolean
   val att: Att
+  def withAtt(att: Att): Sentence
+  def location: Optional[Location] = att.getOptional(classOf[Location])
+  def source: Optional[Source] = att.getOptional(classOf[Source])
 }
 
 // deprecated
 case class Context(body: K, requires: K, att: Att = Att.empty) extends Sentence with OuterKORE with ContextToString {
   override val isSyntax = false
   override val isNonSyntax = true
+  override def withAtt(att: Att) = Context(body, requires, att)
 }
 
 case class Rule(body: K, requires: K, ensures: K, att: Att = Att.empty) extends Sentence with RuleToString with OuterKORE {
   override val isSyntax = false
   override val isNonSyntax = true
+  override def withAtt(att: Att) = Rule(body, requires, ensures, att)
 }
 
 case class ModuleComment(comment: String, att: Att = Att.empty) extends Sentence with OuterKORE {
   override val isSyntax = false
   override val isNonSyntax = true
+  override def withAtt(att: Att) = ModuleComment(comment, att)
 }
 
 // hooked
@@ -278,6 +294,7 @@ case class SyntaxPriority(priorities: Seq[Set[Tag]], att: Att = Att.empty)
   extends Sentence with SyntaxPriorityToString with OuterKORE {
   override val isSyntax = true
   override val isNonSyntax = false
+  override def withAtt(att: Att) = SyntaxPriority(priorities, att)
 }
 
 object Associativity extends Enumeration {
@@ -292,6 +309,7 @@ case class SyntaxAssociativity(
   extends Sentence with SyntaxAssociativityToString with OuterKORE {
   override val isSyntax = true
   override val isNonSyntax = false
+  override def withAtt(att: Att) = SyntaxAssociativity(assoc, tags, att)
 }
 
 case class Tag(name: String) extends TagToString with OuterKORE
@@ -310,14 +328,14 @@ case class SyntaxSort(sort: Sort, att: Att = Att.empty) extends Sentence
 
   override val isSyntax = true
   override val isNonSyntax = false
+  override def withAtt(att: Att) = SyntaxSort(sort, att)
 }
 
-case class Production(sort: Sort, items: Seq[ProductionItem], att: Att)
+case class Production(klabel: Option[KLabel], sort: Sort, items: Seq[ProductionItem], att: Att)
   extends Sentence with ProductionToString {
-  lazy val klabel: Option[KLabel] = att.getOption("klabel") map {org.kframework.kore.KORE.KLabel(_)}
 
   override def equals(that: Any) = that match {
-    case p@Production(`sort`, `items`, _) => this.klabel == p.klabel && this.att.getOption("poly") == p.att.getOption("poly") && this.att.getOption("function") == p.att.getOption("function")
+    case p@Production(`klabel`, `sort`, `items`, _) => this.att.getOption("poly") == p.att.getOption("poly") && this.att.getOption("function") == p.att.getOption("function")
     case _ => false
   }
 
@@ -382,10 +400,10 @@ case class Production(sort: Sort, items: Seq[ProductionItem], att: Att)
     val suffix = items.last
     val newAtt = att.add("recordPrd", classOf[Production], this).add("unparseAvoid")
     if (terminals.isEmpty)
-      Production(sort, prefix :+ suffix, newAtt)
+      Production(klabel, sort, prefix :+ suffix, newAtt)
     else {
       val middle = terminals.tail.foldLeft(Seq(Terminal(terminals.head.name.get), Terminal(":"), terminals.head)){ (l, nt) => l ++ Seq(Terminal(","), Terminal(nt.name.get), Terminal(":"), nt) }
-      Production(sort, prefix ++ middle :+ suffix, newAtt)
+      Production(klabel, sort, prefix ++ middle :+ suffix, newAtt)
     }
   }
 
@@ -397,11 +415,19 @@ case class Production(sort: Sort, items: Seq[ProductionItem], att: Att)
   }
   override val isSyntax = true
   override val isNonSyntax = false
+  override def withAtt(att: Att) = Production(klabel, sort, items, att)
 }
 
 object Production {
-  def apply(klabel: String, sort: Sort, items: Seq[ProductionItem], att: Att = Att.empty): Production = {
-    Production(sort, items, att.add("klabel", klabel))
+  def apply(klabel: KLabel, sort: Sort, items: Seq[ProductionItem], att: Att = Att.empty): Production = {
+    Production(Some(klabel), sort, items, att)
+  }
+  def apply(sort: Sort, items: Seq[ProductionItem], att: Att): Production = {
+    if (att.contains(kLabelAttribute)) {
+      Production(Some(KORE.KLabel(att.get(kLabelAttribute))), sort, items, att)
+    } else {
+      Production(None, sort, items, att)
+    }
   }
 
   val kLabelAttribute = "klabel"
@@ -432,9 +458,4 @@ case class RegexTerminal(precedeRegex: String, regex: String, followRegex: Strin
 
 case class Terminal(value: String) extends TerminalLike // hooked
   with TerminalToString {
-}
-
-/* Helper constructors */
-object NonTerminal {
-  def apply(sort: String, name: Option[String]): NonTerminal = NonTerminal(ADT.Sort(sort), name)
 }

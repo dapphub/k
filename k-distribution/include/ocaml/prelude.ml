@@ -313,6 +313,12 @@ let unescape_k_string (str: string) =
     (prec, exp, (Str.matched_group 1 str))
   else (cMAX_FLOAT_PREC, cMAX_FLOAT_EXP, str)
 
+let signed_extract i idx len =
+  if Z.testbit i (idx + len - 1)
+  then let max = Z.shift_left Z.one (len-1) in
+    Z.sub (Z.extract (Z.add (Z.extract i idx len) max) 0 len) max
+  else Z.extract i idx len
+
 let ktoken (s: sort) (str: string) : kitem = match s with
 | SortInt -> Int (Z.of_string str)
 | SortFloat -> let (p,e,f) = parse_float str in (round_to_range(Float ((Gmp.FR.from_string_prec_base p Gmp.GMP_RNDN 10 f), e, p)))
@@ -594,6 +600,42 @@ struct
   let hook_write c _ _ _ _ = match c with
       [Int fd], [String s] -> unix_error (fun () -> let b = Bytes.of_string s in let _ = Unix.write (Hashtbl.find file_descriptors fd) b 0 (Bytes.length b) in [])
     | _ -> raise Not_implemented
+  let hook_lock c _ _ _ _ = match c with
+      [Int fd], [Int len] -> unix_error (fun () -> Unix.lockf (Hashtbl.find file_descriptors fd) Unix.F_LOCK (Z.to_int len); [])
+    | _ -> raise Not_implemented
+  let hook_unlock c _ _ _ _ = match c with
+      [Int fd], [Int len] -> unix_error (fun () -> Unix.lockf (Hashtbl.find file_descriptors fd) Unix.F_ULOCK (Z.to_int len); [])
+    | _ -> raise Not_implemented
+
+  let log_files = Hashtbl.create 2
+
+  let hook_log c _ _ _ _ = match c with
+      [String path], [String txt] -> 
+      let log = try
+        Hashtbl.find log_files path
+      with Not_found -> 
+        let empty = Buffer.create 16 in
+        Hashtbl.add log_files path empty;
+        empty
+      in
+      Buffer.add_string log txt;
+      []
+    | _ -> raise Not_implemented
+  
+  let flush_log path txt =
+    let dir = Filename.dirname path in
+    let base = Filename.basename path in
+    let pid = string_of_int (Unix.getpid ()) in
+    let new_path = Filename.concat dir (pid ^ "_" ^ base) in
+    let flags = [Open_wronly; Open_append; Open_creat; Open_text] in
+    let out_chan = open_out_gen flags 0o666 new_path in
+    let fd = Unix.descr_of_out_channel out_chan in
+    Unix.lockf fd Unix.F_LOCK 0;
+    output_string out_chan (Buffer.contents txt);
+    close_out out_chan
+
+  let flush_logs () =
+    Hashtbl.iter flush_log log_files 
 
   let hook_stat _ _ _ _ _ = raise Not_implemented
   let hook_lstat _ _ _ _ _ = raise Not_implemented
@@ -697,8 +739,8 @@ struct
   let hook_base2string c _ _ _ _ = match c with
       [Int i], [Int base] -> [String (to_string_base (Z.to_int base) i)]
     | _ -> raise Not_implemented
-  let hook_string2token c _ _ _ _ = match c with
-      [String sort], [String value] -> [ktoken (parse_sort sort) value]
+  let hook_string2token c _ sort _ _ = match c with
+      [String value] -> [ktoken sort value]
     | _ -> raise Not_implemented
   let hook_token2string c _ _ _ _ = match c with
       [KToken(_,s)] -> [String s]
@@ -798,6 +840,15 @@ struct
     | _ -> raise Not_implemented
   let hook_min c _ _ _ _ = match c with
       [Int a], [Int b] -> [Int (Z.min a b)]
+    | _ -> raise Not_implemented
+  let hook_log2 c _ _ _ _ = match c with
+      [Int a] -> [Int (Z.of_int (Z.log2 a))]
+    | _ -> raise Not_implemented
+  let hook_bitRange c _ _ _ _ = match c with
+      [Int i], [Int off], [Int len] -> [Int (try (Z.extract i (Z.to_int off) (Z.to_int len)) with Z.Overflow -> if not (Z.fits_int off) then if Z.geq i Z.zero then Z.zero else Z.of_int (-1) else raise Not_implemented)]
+    | _ -> raise Not_implemented
+  let hook_signExtendBitRange c _ _ _ _ = match c with
+      [Int i], [Int off], [Int len] -> [Int (try (signed_extract i (Z.to_int off) (Z.to_int len)) with Z.Overflow -> if not (Z.fits_int off) then if Z.geq i Z.zero then Z.zero else Z.of_int (-1) else raise Not_implemented)]
     | _ -> raise Not_implemented
   let hook_rand c _ _ _ _ = match c with
       [Int max] -> let mpz = Gmp.Z.urandomm Gmp.RNG.default (from_zarith max) in
