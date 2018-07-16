@@ -197,7 +197,7 @@ public class KPrint {
                     } else {
                         items = k.klist().items();
                     }
-                    return KApply(k.klabel(), KList(items), k.att());
+                    return KApply(k.klabel(), KList(items.stream().map(arg -> flattenKLabels(module, arg)).collect(Collectors.toList())), k.att());
                 } else {
                     return super.apply(k);
                 }

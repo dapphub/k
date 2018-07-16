@@ -59,7 +59,7 @@ public class Debugg {
             String path       = sessionDir.getAbsolutePath();
             Debugg.nodesDir   = new File(Debugg.sessionDir, "nodes/");
             Debugg.nodesDir.mkdirs();
-            Debugg.sessionLog = new PrintWriter(Debugg.sessionDir.getAbsolutePath() + "/debugg.log");
+           Debugg.sessionLog = new PrintWriter(Debugg.sessionDir.getAbsolutePath() + "/debugg" + ".log");
             System.out.println("Debugg: " + Debugg.sessionDir.getAbsolutePath());
         } catch (FileNotFoundException e) {
             e.printStackTrace();
