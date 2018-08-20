@@ -56,6 +56,8 @@ public class    KILtoSMTLib extends CopyOnWriteTransformer {
             Sort.of(KORE.Sort("FloatSeq")),
             Sort.of(KORE.Sort("StringSeq")));
     public static final ImmutableSet<String> SMTLIB_BUILTIN_FUNCTIONS = ImmutableSet.of(
+            "pow255",
+            "pow256",
             "forall",
             "exists",
             /* array theory */
@@ -86,6 +88,11 @@ public class    KILtoSMTLib extends CopyOnWriteTransformer {
             "int_max",
             "int_min",
             "int_abs",
+            /* (signed) word arithmetic theory */
+            "signed",
+            "unsigned",
+            "signed_abs",
+            "signed_sgn",
             /* extra float theory */
             "remainder",
             "min",
