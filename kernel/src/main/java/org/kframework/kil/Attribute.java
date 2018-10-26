@@ -33,7 +33,7 @@ public class Attribute<T> extends ASTNode {
     public static final String MACRO_KEY = "macro";
     public static final String LEMMA_KEY = "lemma";
     public static final String TRUSTED_KEY = "trusted";
-    public static final String SIMPLIFICATION_KEY = "simplification";
+    public static final String MATCHING_KEY = "matching";
 
     public static final String FRESH_GENERATOR = "freshGenerator";
     public static final String BITWIDTH_KEY = "bitwidth";
