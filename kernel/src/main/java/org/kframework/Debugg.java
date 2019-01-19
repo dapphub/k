@@ -63,7 +63,7 @@ public class Debugg {
                     ? files.resolveKompiled(sessionId + ".debugg")
                     : new File(kproveOptions.debuggPath);
             String path       = sessionDir.getAbsolutePath();
-            Debugg.nodesDir   = new File(Debugg.sessionDir, "blobs/");
+            Debugg.nodesDir   = new File(Debugg.sessionDir, kproveOptions.debuggId + "_blobs/");
             Debugg.nodesDir.mkdirs();
             Debugg.sessionLog = new PrintWriter(Debugg.sessionDir.getAbsolutePath() + "/" + kproveOptions.debuggId + ".log");
             System.out.println("Debugg: " + kproveOptions.debuggId);
