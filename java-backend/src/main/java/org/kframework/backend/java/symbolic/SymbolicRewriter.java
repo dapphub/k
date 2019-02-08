@@ -723,6 +723,7 @@ public class SymbolicRewriter {
                                             cterm.constraint().substitution().keySet(),
                                             initialTerm.variableSet())),
                             cterm.termContext());
+                    global.stateLog.log(StateLog.LogEvent.RULEAPPLICATION, term.term(), term.constraint(), result.term(), result.constraint());
                     if (visited.add(result)) {
                         nextQueue.add(result);
                     }
@@ -866,6 +867,7 @@ public class SymbolicRewriter {
                 if (global.javaExecutionOptions.logRulesPublic) {
                     RuleSourceUtil.printRuleAndSource(specRule);
                 }
+                global.stateLog.log(StateLog.LogEvent.RULEAPPLICATION, constrainedTerm.term(), constrainedTerm.constraint(), result.term(), result.constraint());
                 return result;
             }
         }

@@ -104,7 +104,7 @@ public class ToJson {
             KVariable var = (KVariable) k;
 
             knode.add("node", JsonParser.KVARIABLE);
-            knode.add("name", var.name());
+            knode.add("name", var.toString());
 
         } else if (k instanceof KRewrite) {
             KRewrite rew = (KRewrite) k;
