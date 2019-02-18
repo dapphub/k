@@ -171,7 +171,7 @@ public class KPrint {
             @Override
             public K apply(KVariable k) {
                 if (k.att().contains("anonymous")) {
-                    return renames.computeIfAbsent(k, k2 -> KVariable("V" + newCount++, k.att()));
+                    return renames.computeIfAbsent(k, k2 -> KVariable(k2.toString(), k.att()));
                 }
                 return k;
             }
@@ -205,7 +205,7 @@ public class KPrint {
         if (! termSort.isEmpty()) {
             finalSort = termSort.get();
         }
-        return KToken(kapp.klabel().name(), finalSort);
+        return KApply(kapp.klabel(), KToken(kapp.klabel().name(), finalSort));
     }
 
     private K tokenizeTerm(Module mod, KApply kapp) {
@@ -216,7 +216,7 @@ public class KPrint {
         if (! termSort.isEmpty()) {
             finalSort = termSort.get();
         }
-        return KToken(tokenizedTerm, finalSort);
+        return KApply(kapp.klabel(), KToken(tokenizedTerm, finalSort));
     }
 
     public static K flattenTerm(Module mod, KApply kapp) {
