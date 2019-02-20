@@ -227,7 +227,7 @@ public class KPrint {
         return KToken(tokenizedTerm, finalSort);
     }
 
-    public static K flattenTerm(Module mod, KApply kapp) {
+    private static K flattenTerm(Module mod, KApply kapp) {
         List<K> items = new ArrayList<>();
         Att att = mod.attributesFor().apply(KLabel(kapp.klabel().name()));
         if (att.contains("assoc") && att.contains("unit")) {
@@ -238,7 +238,7 @@ public class KPrint {
         return KApply(kapp.klabel(), KList(items), kapp.att());
     }
 
-    public static K toKASTTerm(Module mod, KApply kapp) {
+    private static K toKASTTerm(Module mod, KApply kapp) {
         String       kastTerm  = ToKast.apply(kapp);
         Sort         finalSort = Sorts.K();
         Option<Sort> termSort  = mod.sortFor().get(kapp.klabel());
