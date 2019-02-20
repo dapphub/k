@@ -25,4 +25,8 @@ public class PrettyPrinter {
     public void prettyPrint(K target) {
         kprint.prettyPrint(def, module, kprint::outputFile, target);
     }
+
+    public byte[] prettyPrintBytes(K target) {
+        return kprint.prettyPrint(def, module, target);
+    }
 }
