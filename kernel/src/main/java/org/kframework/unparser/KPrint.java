@@ -192,7 +192,7 @@ public class KPrint {
                 String name = orig.klabel().name();
                 return options.omittedKLabels.contains(name)   ? omitTerm(mod, orig)
                      : options.tokenizedKLabels.contains(name) ? tokenizeTerm(mod, orig)
-                     : options.flattenedKLabels.contains(name) ? super.apply(flattenTerm(mod, orig))
+                     : options.flattenedKLabels.contains(name) ? flattenTerm(mod, orig)
                      : options.tokastKLabels.contains(name)    ? toKASTTerm(mod, orig)
                      : super.apply(orig) ;
             }
