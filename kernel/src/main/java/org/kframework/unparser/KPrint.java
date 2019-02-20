@@ -171,7 +171,7 @@ public class KPrint {
             @Override
             public K apply(KVariable k) {
                 if (k.att().contains("anonymous")) {
-                    return renames.computeIfAbsent(k, k2 -> KVariable(k2.toString(), k.att()));
+                    return renames.computeIfAbsent(k, k2 -> KVariable("V" + newCount++, k.att()));
                 }
                 return k;
             }
