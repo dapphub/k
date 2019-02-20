@@ -60,7 +60,7 @@ public class StateLog {
 
         if (javaExecutionOptions.stateLogId != null) this.sessionId = javaExecutionOptions.stateLogId;
 
-        this.blobsDir = new File(loggingPath, "blobs/");
+        this.blobsDir = new File(loggingPath, this.sessionId + "_blobs/");
         this.blobsDir.mkdirs();
 
         this.logEvents = javaExecutionOptions.stateLogEvents;
@@ -83,7 +83,7 @@ public class StateLog {
     }
 
     public static enum LogEvent {
-        OPEN, REACHINIT, REACHTARGET, REACHPROVED, NODE, RULE, SRULE, RULEATTEMPT, IMPLICATION, Z3QUERY, Z3RESULT, CLOSE
+        OPEN, REACHINIT, REACHTARGET, REACHPROVED, NODE, RULE, SRULE, RULEATTEMPT, RULEAPPLICATION, IMPLICATION, Z3QUERY, Z3RESULT, CLOSE
     }
 
     public void log(String logItem) {
