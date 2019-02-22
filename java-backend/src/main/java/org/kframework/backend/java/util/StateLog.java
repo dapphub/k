@@ -111,19 +111,20 @@ public class StateLog {
     }
 
     private static String hash(K in) {
-        MessageDigest m = null;
-        String hashtext = "__";
-        try {
-            m = MessageDigest.getInstance("MD5");
-            m.reset();
-            m.update(KPrint.serialize(in, OutputModes.KAST));
-            byte[] digest = m.digest();
-            BigInteger bigInt = new BigInteger(1,digest);
-            hashtext = bigInt.toString(16);
-        } catch (NoSuchAlgorithmException e) {
-            e.printStackTrace();
-        }
-        return hashtext;
+        return Integer.toString(Math.abs(in.hashCode()));
+        // MessageDigest m = null;
+        // String hashtext = "__";
+        // try {
+        //     m = MessageDigest.getInstance("MD5");
+        //     m.reset();
+        //     m.update(KPrint.serialize(in, OutputModes.KAST));
+        //     byte[] digest = m.digest();
+        //     BigInteger bigInt = new BigInteger(1,digest);
+        //     hashtext = bigInt.toString(16);
+        // } catch (NoSuchAlgorithmException e) {
+        //     e.printStackTrace();
+        // }
+        // return hashtext;
     }
 
     private String writeNode(K contents) {
