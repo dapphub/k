@@ -153,11 +153,10 @@ public class KPrint {
     }
 
     public K abstractTerm(Module mod, K term) {
-        K collectionsSorted = sortCollections(mod, term);
-        K alphaRenamed      = options.noAlphaRenaming ? collectionsSorted : alphaRename(collectionsSorted);
+        //        K collectionsSorted = sortCollections(mod, term);
+        K alphaRenamed      = options.noAlphaRenaming ? term : alphaRename(term);
         K squashedTerm      = squashTerms(mod, alphaRenamed);
         K flattenedTerm     = flattenTerms(mod, squashedTerm);
-
         return flattenedTerm;
     }
 
