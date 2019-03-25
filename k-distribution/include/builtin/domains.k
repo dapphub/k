@@ -504,7 +504,7 @@ module STRING
   imports FLOAT-SYNTAX
   imports K-EQUAL
 
-  syntax String ::= String "+String" String    [function, functional, left, latex({#1}+_{\scriptstyle\it String}{#2}), hook(STRING.concat)]
+  syntax String ::= String "+String" String    [function, functional, left, latex({#1}+_{\scriptstyle\it String}{#2}), hook(STRING.concat), smtlib(smt_StringConcat)]
 
   syntax Bool ::= String "==String" String [function, functional, left, hook(STRING.eq)]
 
