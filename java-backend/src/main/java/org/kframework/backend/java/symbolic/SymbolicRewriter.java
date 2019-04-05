@@ -641,7 +641,7 @@ public class SymbolicRewriter {
 
             for (ConstrainedTerm term : queue) {
                 v++;
-
+                term.termContext().setTopConstraint(null); //To remove leftover constraint from previous step
                 boolean boundaryCellsMatchTarget = boundaryCellsMatchTarget(term, boundaryPattern, targetBoundarySub);
                 //var required to avoid logging the same step multiple times.
                 boolean alreadyLogged = logStep(step, v, term,
