@@ -174,6 +174,10 @@ public class InitializeRewriter implements Function<org.kframework.definition.De
             rewritingContext.stateLog.log(StateLog.LogEvent.EXECINIT, backendKil, KApply(KLabels.ML_TRUE));
             rewritingContext.setExecutionPhase(true);
             SymbolicRewriter rewriter = new SymbolicRewriter(rewritingContext, transitions, converter);
+            if (javaExecutionOptions.skipInvokingBackend) {
+                System.err.println("Skipping invoking the backend!");
+                return new RewriterResult(Optional.empty(), Optional.of(0), null);
+            }
             RewriterResult result = rewriter.rewrite(new ConstrainedTerm(backendKil, termContext), depth.orElse(-1));
             rewritingContext.stateLog.close();
             return result;
@@ -197,6 +201,10 @@ public class InitializeRewriter implements Function<org.kframework.definition.De
             rewritingContext.stateLog.log(StateLog.LogEvent.SEARCHINIT, javaTerm, KApply(KLabels.ML_TRUE));
             org.kframework.backend.java.kil.Rule javaPattern = convertToJavaPattern(converter, pattern);
             SymbolicRewriter rewriter = new SymbolicRewriter(rewritingContext, transitions, converter);
+            if (javaExecutionOptions.skipInvokingBackend) {
+                System.err.println("Skipping invoking the backend!");
+                return initialConfiguration;
+            }
             K result = rewriter.search(javaTerm, javaPattern, bound.orElse(NEGATIVE_VALUE), depth.orElse(NEGATIVE_VALUE), searchType, termContext);
             rewritingContext.stateLog.log(StateLog.LogEvent.SEARCHREACH, result);
             rewritingContext.stateLog.close();
@@ -225,6 +233,11 @@ public class InitializeRewriter implements Function<org.kframework.definition.De
                     .collect(Collectors.toList());
 
             SymbolicRewriter rewriter = new SymbolicRewriter(rewritingContext, transitions, converter);
+
+            if (javaExecutionOptions.skipInvokingBackend) {
+                System.err.println("Skipping invoking the backend!");
+                return new RewriterResult(Optional.empty(), Optional.of(0), null);
+            }
 
             rewritingContext.setExecutionPhase(true);
             List<ConstrainedTerm> proofResults = proofObligationRules.stream()
