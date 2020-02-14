@@ -398,8 +398,12 @@ public class KItem extends Term implements KItemRepresentation {
             } catch (StackOverflowError e) {
                 throw KEMException.criticalError("5", e);
             } catch (KEMException e) {
+                StackWalker walker = StackWalker
+                                        .getInstance(StackWalker.Option.RETAIN_CLASS_REFERENCE);
+                Class<?> callerClass = walker.getCallerClass();
+                System.err.println("fuck my life: " + e.toString());
+                System.err.println("caller: " + callerClass.toString());
                 e.exception.addTraceFrame("while evaluating function " + kItem.kLabel().toString());
-                System.err.println("fuck my life:" + e.toString());
                 throw e;
             }
         }
