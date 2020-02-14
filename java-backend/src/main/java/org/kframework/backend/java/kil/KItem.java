@@ -400,7 +400,10 @@ public class KItem extends Term implements KItemRepresentation {
             } catch (KEMException e) {
                 System.err.println("fuck my life: " + e.toString() + " /end");
                 StackTraceElement[] stackTraceElements = Thread.currentThread().getStackTrace();
-                System.err.println("caller: " + "class: " + stackTraceElements[1].getClassName() + "method: " + stackTraceElements[1].getMethodName());
+                for (int i = 1; i < 10; i++) {
+                    System.err.println(i + " - caller: " + "class: " + stackTraceElements[i].getClassName() + "method: " + stackTraceElements[i].getMethodName());
+                    System.err.println(i + " - caller: " + "filename: " + stackTraceElements[i].getFileName() + "lineno: " + stackTraceElements[i].getLineNumber());
+                }
                 e.exception.addTraceFrame("while evaluating function " + kItem.kLabel().toString());
                 throw e;
             }
