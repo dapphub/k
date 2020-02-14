@@ -61,7 +61,7 @@ public abstract class FrontEnd {
                 try {
                     retval = run();
                 } catch (ParameterException e) {
-                    throw KEMException.criticalError(e.getMessage(), e);
+                    throw KEMException.criticalError("3", e);
                 } finally {
                     files.get().deleteTempDir(kem);
                 }
@@ -81,6 +81,7 @@ public abstract class FrontEnd {
     }
 
     public static void printBootError(String message) {
+        System.err.println("4");
         System.err.println(StringUtil.splitLines(KException.criticalError(message).toString()));
     }
 }

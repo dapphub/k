@@ -396,7 +396,7 @@ public class KItem extends Term implements KItemRepresentation {
                 }
                 return result;
             } catch (StackOverflowError e) {
-                throw KEMException.criticalError(TRACE_MSG, e);
+                throw KEMException.criticalError("5", e);
             } catch (KEMException e) {
                 e.exception.addTraceFrame("while evaluating function " + kItem.kLabel().toString());
                 throw e;
@@ -562,7 +562,7 @@ public class KItem extends Term implements KItemRepresentation {
                                         sb.append("Candidate results:\n");
                                         sb.append(result).append("\n");
                                         sb.append(rightHandSide).append("\n");
-                                        throw KEMException.criticalError(sb.toString());
+                                        throw KEMException.criticalError("6");
                                     }
                                 }
                                 RuleAuditing.succeed(rule);

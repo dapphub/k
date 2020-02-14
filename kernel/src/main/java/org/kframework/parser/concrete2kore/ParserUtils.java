@@ -169,7 +169,7 @@ public class ParserUtils {
         try {
             return FileUtils.readFileToString(makeAbsolute.apply(definitionFile));
         } catch (IOException e) {
-            throw KEMException.criticalError(e.getMessage(), e);
+            throw KEMException.criticalError("2", e);
         }
     }
 
