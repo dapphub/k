@@ -454,6 +454,7 @@ public class KItem extends Term implements KItemRepresentation {
             try {
                 KList kList = (KList) kItem.kList;
 
+                System.err.println("before first if");
                 if (builtins.get().isBuiltinKLabel(kLabelConstant)) {
                     try {
                         Term[] arguments = kList.getContents().toArray(new Term[kList.getContents().size()]);
@@ -484,12 +485,14 @@ public class KItem extends Term implements KItemRepresentation {
                         }
                     }
                 }
+                System.err.println("after first if");
 
                 /* evaluate a sort membership predicate */
                 // TODO(YilongL): maybe we can move sort membership evaluation after
                 // applying user-defined rules to allow the users to provide their
                 // own rules for checking sort membership
                 Definition definition = context.definition();
+                System.err.println("before sort predicate bullshit");
                 if (kLabelConstant.isSortPredicate() && kList.getContents().size() == 1) {
                     Term checkResult = SortMembership.check(kItem, definition);
                     if (checkResult != kItem) {
@@ -500,6 +503,7 @@ public class KItem extends Term implements KItemRepresentation {
 
                 /* apply rules for user defined functions */
                 Collection<Rule> rulesForKLabel = definition.functionRules().get(kLabelConstant);
+                System.err.println("before ifEmpty");
                 if (!rulesForKLabel.isEmpty()) {
                     Term result = null;
                     Term owiseResult = null;
@@ -508,6 +512,7 @@ public class KItem extends Term implements KItemRepresentation {
 
                     // an argument is concrete if it doesn't contain variables or unresolved functions
                     boolean isConcrete = kList.getContents().stream().filter(elem -> !elem.isGround() || !elem.isNormal()).collect(Collectors.toList()).isEmpty();
+                    System.err.println("before for loop");
                     for (Rule rule : rulesForKLabel) {
                         try {
                             if (rule == RuleAuditing.getAuditingRule()) {
@@ -540,6 +545,7 @@ public class KItem extends Term implements KItemRepresentation {
                             }
                             KItemLog.logApplyingFuncRule(kLabelConstant, nestingLevel, rule, kItem.global);
 
+                            System.err.println("at middle of inner loop");
                             /* rename fresh variables of the rule */
                             boolean hasFreshVars = false;
                             for (Variable freshVar : rule.variableSet()) {
@@ -585,6 +591,7 @@ public class KItem extends Term implements KItemRepresentation {
                             KItemLog.logRuleApplied(kLabelConstant, nestingLevel, result != null, rule,
                                     kItem.global);
 
+                            System.err.println("before break");
                             /*
                              * If the function definitions do not need to be deterministic, try them in order
                              * and apply the first one that matches.
@@ -592,6 +599,7 @@ public class KItem extends Term implements KItemRepresentation {
                             if (!deterministicFunctions && result != null) {
                                 break;
                             }
+                            System.err.println("after break");
                         } catch (KEMException e) {
                             addDetailedStackFrame(e, kItem, rule, context);
                             throw e;
