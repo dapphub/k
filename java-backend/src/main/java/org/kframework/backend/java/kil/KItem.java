@@ -598,7 +598,8 @@ public class KItem extends Term implements KItemRepresentation {
                             // DISABLE EXCEPTION CHECKSTYLE
                         } catch (RuntimeException | AssertionError | StackOverflowError e) {
                             // ENABLE EXCEPTION CHECKSTYLE
-                            KEMException newExc = KEMException.criticalError("", e);
+                            System.err.println("printing e before it's thrown" + e.toString());
+                            KEMException newExc = KEMException.criticalError("foo!", e);
                             addDetailedStackFrame(newExc, kItem, rule, context);
                             throw newExc;
                         } finally {
