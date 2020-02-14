@@ -373,22 +373,28 @@ public class KItem extends Term implements KItemRepresentation {
         public Term resolveFunctionAndAnywhere(KItem kItem, TermContext context) {
             try {
                 Term result = kItem.isEvaluable() ? evaluateFunction(kItem, context) : kItem.applyAnywhereRules(context);
+                System.err.println("before first if");
                 if (result instanceof KItem && ((KItem) result).isEvaluable() && result.isGround()) {
                     // we do this check because this warning message can be very large and cause OOM
+                    System.err.println("inside first if");
                     if (options.warnings.includesExceptionType(ExceptionType.HIDDENWARNING) && stage == Stage.REWRITING) {
+                        System.err.println("inside second if");
                         StringBuilder sb = new StringBuilder();
                         sb.append("Unable to resolve function symbol:\n\t\t");
                         sb.append(result);
                         sb.append('\n');
                         if (!context.definition().functionRules().isEmpty()) {
+                            System.err.println("inside third if");
                             sb.append("\tDefined function rules:\n");
                             for (Rule rule : context.definition().functionRules().get((KLabelConstant) ((KItem) result).kLabel())) {
                                 sb.append("\t\t");
                                 sb.append(rule);
                                 sb.append('\n');
                             }
+                            System.err.println("end of third if");
                         }
                         kem.registerInternalHiddenWarning(sb.toString(), kItem);
+                        System.err.println("end of second if");
                     }
                     if (RuleAuditing.isAuditBegun()) {
                         System.err.println("Function failed to evaluate: returned " + result);
@@ -399,7 +405,7 @@ public class KItem extends Term implements KItemRepresentation {
                 throw KEMException.criticalError("5", e);
             } catch (KEMException e) {
                 System.err.println("fuck my life: " + e.toString() + " /end");
-                StackTraceElement[] stackTraceElements = Thread.currentThread().getStackTrace();
+                StackTraceElement[] stackTraceElements = e.getStackTrace();
                 for (int i = 1; i < 10; i++) {
                     System.err.println(i + " - caller: " + "class: " + stackTraceElements[i].getClassName() + "method: " + stackTraceElements[i].getMethodName());
                     System.err.println(i + " - caller: " + "filename: " + stackTraceElements[i].getFileName() + "lineno: " + stackTraceElements[i].getLineNumber());
