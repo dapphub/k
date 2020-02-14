@@ -399,7 +399,7 @@ public class KItem extends Term implements KItemRepresentation {
                 throw KEMException.criticalError("5", e);
             } catch (KEMException e) {
                 System.err.println("fuck my life: " + e.toString() + " /end");
-                StackTraceElement[] stackTraceElements = Thread.currentThread().getStackTrace()
+                StackTraceElement[] stackTraceElements = Thread.currentThread().getStackTrace();
                 System.err.println("caller: " + "class: " + stackTraceElements[1].getClassName() + "method: " + stackTraceElements[1].getMethodName());
                 e.exception.addTraceFrame("while evaluating function " + kItem.kLabel().toString());
                 throw e;
