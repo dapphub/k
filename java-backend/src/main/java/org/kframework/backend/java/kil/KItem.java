@@ -401,7 +401,6 @@ public class KItem extends Term implements KItemRepresentation {
                 e.exception.addTraceFrame("while evaluating function " + kItem.kLabel().toString());
                 System.err.println("fuck my life:" + e.toString());
                 System.err.println("kitem" + kItem.toString());
-                System.err.println("context" + context.toString());
                 throw e;
             }
         }
