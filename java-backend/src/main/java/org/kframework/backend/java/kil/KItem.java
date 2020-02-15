@@ -525,6 +525,7 @@ public class KItem extends Term implements KItemRepresentation {
                             Substitution<Variable, Term> solution;
                             List<Substitution<Variable, Term>> matches =
                                     PatternMatcher.match(kItem, rule, context, "KItem", nestingLevel);
+                            System.err.println("before isEmpty");
                             if (matches.isEmpty()) {
                                 continue;
                             } else {
