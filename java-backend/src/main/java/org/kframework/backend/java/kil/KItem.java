@@ -405,11 +405,7 @@ public class KItem extends Term implements KItemRepresentation {
                 throw KEMException.criticalError("5", e);
             } catch (KEMException e) {
                 System.err.println("fuck my life: " + e.toString() + " /end");
-                StackTraceElement[] stackTraceElements = e.getStackTrace();
-                for (int i = 1; i < 10; i++) {
-                    System.err.println(i + " - caller: " + "class: " + stackTraceElements[i].getClassName() + "method: " + stackTraceElements[i].getMethodName());
-                    System.err.println(i + " - caller: " + "filename: " + stackTraceElements[i].getFileName() + "lineno: " + stackTraceElements[i].getLineNumber());
-                }
+                e.printStackTrace();
                 e.exception.addTraceFrame("while evaluating function " + kItem.kLabel().toString());
                 throw e;
             }
@@ -607,6 +603,7 @@ public class KItem extends Term implements KItemRepresentation {
                         } catch (RuntimeException | AssertionError | StackOverflowError e) {
                             // ENABLE EXCEPTION CHECKSTYLE
                             System.err.println("printing e before it's thrown" + e.toString());
+                            e.printStackTrace();
                             KEMException newExc = KEMException.criticalError("foo!", e);
                             addDetailedStackFrame(newExc, kItem, rule, context);
                             throw newExc;
