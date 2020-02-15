@@ -402,7 +402,7 @@ public class KItem extends Term implements KItemRepresentation {
                 }
                 return result;
             } catch (StackOverflowError e) {
-                throw KEMException.criticalError("5", e);
+                throw KEMException.criticalError(TRACE_MSG, e);
             } catch (KEMException e) {
                 System.err.println("fuck my life: " + e.toString() + " /end");
                 e.printStackTrace();
@@ -577,7 +577,7 @@ public class KItem extends Term implements KItemRepresentation {
                                         sb.append("Candidate results:\n");
                                         sb.append(result).append("\n");
                                         sb.append(rightHandSide).append("\n");
-                                        throw KEMException.criticalError("6");
+                                        throw KEMException.criticalError(sb.toString());
                                     }
                                 }
                                 RuleAuditing.succeed(rule);
@@ -605,7 +605,7 @@ public class KItem extends Term implements KItemRepresentation {
                             // ENABLE EXCEPTION CHECKSTYLE
                             System.err.println("printing e before it's thrown" + e.toString());
                             e.printStackTrace();
-                            KEMException newExc = KEMException.criticalError("foo!", e);
+                            KEMException newExc = KEMException.criticalError("", e);
                             addDetailedStackFrame(newExc, kItem, rule, context);
                             throw newExc;
                         } finally {
