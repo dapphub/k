@@ -373,28 +373,22 @@ public class KItem extends Term implements KItemRepresentation {
         public Term resolveFunctionAndAnywhere(KItem kItem, TermContext context) {
             try {
                 Term result = kItem.isEvaluable() ? evaluateFunction(kItem, context) : kItem.applyAnywhereRules(context);
-                System.err.println("before first if");
                 if (result instanceof KItem && ((KItem) result).isEvaluable() && result.isGround()) {
                     // we do this check because this warning message can be very large and cause OOM
-                    System.err.println("inside first if");
                     if (options.warnings.includesExceptionType(ExceptionType.HIDDENWARNING) && stage == Stage.REWRITING) {
-                        System.err.println("inside second if");
                         StringBuilder sb = new StringBuilder();
                         sb.append("Unable to resolve function symbol:\n\t\t");
                         sb.append(result);
                         sb.append('\n');
                         if (!context.definition().functionRules().isEmpty()) {
-                            System.err.println("inside third if");
                             sb.append("\tDefined function rules:\n");
                             for (Rule rule : context.definition().functionRules().get((KLabelConstant) ((KItem) result).kLabel())) {
                                 sb.append("\t\t");
                                 sb.append(rule);
                                 sb.append('\n');
                             }
-                            System.err.println("end of third if");
                         }
                         kem.registerInternalHiddenWarning(sb.toString(), kItem);
-                        System.err.println("end of second if");
                     }
                     if (RuleAuditing.isAuditBegun()) {
                         System.err.println("Function failed to evaluate: returned " + result);
@@ -404,7 +398,6 @@ public class KItem extends Term implements KItemRepresentation {
             } catch (StackOverflowError e) {
                 throw KEMException.criticalError(TRACE_MSG, e);
             } catch (KEMException e) {
-                System.err.println("fuck my life: " + e.toString() + " /end");
                 e.printStackTrace();
                 e.exception.addTraceFrame("while evaluating function " + kItem.kLabel().toString());
                 throw e;
@@ -450,7 +443,6 @@ public class KItem extends Term implements KItemRepresentation {
             try {
                 KList kList = (KList) kItem.kList;
 
-                System.err.println("before first if");
                 if (builtins.get().isBuiltinKLabel(kLabelConstant)) {
                     try {
                         Term[] arguments = kList.getContents().toArray(new Term[kList.getContents().size()]);
@@ -481,14 +473,12 @@ public class KItem extends Term implements KItemRepresentation {
                         }
                     }
                 }
-                System.err.println("after first if");
 
                 /* evaluate a sort membership predicate */
                 // TODO(YilongL): maybe we can move sort membership evaluation after
                 // applying user-defined rules to allow the users to provide their
                 // own rules for checking sort membership
                 Definition definition = context.definition();
-                System.err.println("before sort predicate bullshit");
                 if (kLabelConstant.isSortPredicate() && kList.getContents().size() == 1) {
                     Term checkResult = SortMembership.check(kItem, definition);
                     if (checkResult != kItem) {
@@ -499,7 +489,6 @@ public class KItem extends Term implements KItemRepresentation {
 
                 /* apply rules for user defined functions */
                 Collection<Rule> rulesForKLabel = definition.functionRules().get(kLabelConstant);
-                System.err.println("before ifEmpty");
                 if (!rulesForKLabel.isEmpty()) {
                     Term result = null;
                     Term owiseResult = null;
@@ -508,7 +497,6 @@ public class KItem extends Term implements KItemRepresentation {
 
                     // an argument is concrete if it doesn't contain variables or unresolved functions
                     boolean isConcrete = kList.getContents().stream().filter(elem -> !elem.isGround() || !elem.isNormal()).collect(Collectors.toList()).isEmpty();
-                    System.err.println("before for loop");
                     for (Rule rule : rulesForKLabel) {
                         try {
                             if (rule == RuleAuditing.getAuditingRule()) {
@@ -525,7 +513,6 @@ public class KItem extends Term implements KItemRepresentation {
                             Substitution<Variable, Term> solution;
                             List<Substitution<Variable, Term>> matches =
                                     PatternMatcher.match(kItem, rule, context, "KItem", nestingLevel);
-                            System.err.println("before isEmpty");
                             if (matches.isEmpty()) {
                                 continue;
                             } else {
@@ -542,7 +529,6 @@ public class KItem extends Term implements KItemRepresentation {
                             }
                             KItemLog.logApplyingFuncRule(kLabelConstant, nestingLevel, rule, kItem.global);
 
-                            System.err.println("at middle of inner loop");
                             /* rename fresh variables of the rule */
                             boolean hasFreshVars = false;
                             for (Variable freshVar : rule.variableSet()) {
@@ -588,7 +574,6 @@ public class KItem extends Term implements KItemRepresentation {
                             KItemLog.logRuleApplied(kLabelConstant, nestingLevel, result != null, rule,
                                     kItem.global);
 
-                            System.err.println("before break");
                             /*
                              * If the function definitions do not need to be deterministic, try them in order
                              * and apply the first one that matches.
@@ -596,14 +581,12 @@ public class KItem extends Term implements KItemRepresentation {
                             if (!deterministicFunctions && result != null) {
                                 break;
                             }
-                            System.err.println("after break");
                         } catch (KEMException e) {
                             addDetailedStackFrame(e, kItem, rule, context);
                             throw e;
                             // DISABLE EXCEPTION CHECKSTYLE
                         } catch (RuntimeException | AssertionError | StackOverflowError e) {
                             // ENABLE EXCEPTION CHECKSTYLE
-                            System.err.println("printing e before it's thrown" + e.toString());
                             e.printStackTrace();
                             KEMException newExc = KEMException.criticalError("", e);
                             addDetailedStackFrame(newExc, kItem, rule, context);
